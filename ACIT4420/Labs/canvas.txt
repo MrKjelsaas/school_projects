@@ -1,0 +1,592 @@
+All roles
+Profile Picture	Name	Login ID	SIS ID	Section	Role	Last Activity	Total Activity	Administrative Links
+Pernille Aaby
+Pernille Aaby	s351656@oslomet.no	fs:215:1027378	
+ACIT4420-1 20H
+Student
+13 Sep at 19:49
+03:23:55
+Sushil Acharya
+Sushil Acharya	s356528@oslomet.no	fs:215:967714	
+ACIT4420-1 20H
+Student
+13 Sep at 22:25
+12:37:56
+IOANNIS ADAMOPOULOS
+IOANNIS ADAMOPOULOS	s350141@oslomet.no	fs:215:1028618	
+ACIT4420-1 20H
+Student
+9 Sep at 23:39
+10:22:15
+Cato Hilmi Akay
+Cato Hilmi Akay	s326326@oslomet.no	fs:215:842244	
+ACIT4420-1 20H
+Student
+6 Sep at 20:06
+02:33:31
+Alyaa Abdulkhaleq Abduljabbar Al-Jasim
+Alyaa Abdulkhaleq Abduljabbar Al-Jasim	s341354@oslomet.no	fs:215:895439	
+ACIT4420-1 20H
+Student
+14 Sep at 9:31
+15:51:31
+Anantha Padmanaban Balasubramanian
+Anantha Padmanaban Balasubramanian	s341358@oslomet.no	fs:215:948450	
+ACIT4420-1 20H
+Student
+25 Aug at 10:11
+07:18
+Abdifatah Ali Bashi
+Abdifatah Ali Bashi	s309854@oslomet.no	fs:215:781193	
+ACIT4420-1 20H
+Student
+13 Sep at 17:16
+02:07:12
+Houda Benzazah
+Houda Benzazah	s341474@oslomet.no	fs:215:885536	
+ACIT4420-1 20H
+Student
+5 Sep at 17:22
+02:13
+Olav Backer-Grøndahl Bjørnli
+Olav Backer-Grøndahl Bjørnli	s349771@oslomet.no	fs:215:856916	
+ACIT4420-1 20H
+Student
+12 Sep at 17:53
+09:52:46
+Andrey Bliznyuk
+Andrey Bliznyuk	s326609@oslomet.no	fs:215:876761	
+ACIT4420-1 20H
+Student
+14 Sep at 9:29
+07:24
+Kristian Brathovde
+Kristian Brathovde	s326151@oslomet.no	fs:215:842285	
+ACIT4420-1 20H
+Student
+9 Sep at 13:42
+09:08:32
+Bo Magnus Bratsberg
+Bo Magnus Bratsberg	s348572@oslomet.no	fs:215:514815	
+ACIT4420-1 20H
+Student
+12 Sep at 23:16
+13:08:56
+Cathrine Kieu Trang Bui
+Cathrine Kieu Trang Bui	s236646@oslomet.no	fs:215:671807	
+ACIT4420-1 20H
+Student
+Arham Nadeem Butt
+Arham Nadeem Butt	s188110@oslomet.no	fs:215:523165	
+ACIT4420-1 20H
+Student
+11 Sep at 16:40
+07:11:52
+Karan Singh Chaudhary
+Karan Singh Chaudhary	s329926@oslomet.no	fs:215:880815	
+ACIT4420-1 20H
+Student
+9 Sep at 13:24
+03:21:56
+Muhammad Ibraheem Cheema
+Muhammad Ibraheem Cheema	s171212@oslomet.no	fs:215:374752	
+ACIT4420-1 20H
+Student
+10 Sep at 13:38
+03:26:53
+Jasotharan Cyril
+Jasotharan Cyril	s325909@oslomet.no	fs:215:854443	
+ACIT4420-1 20H
+Student
+9 Sep at 17:23
+04:49:01
+Nicklas Risan Dahl
+Nicklas Risan Dahl	s319478@oslomet.no	fs:215:851374	
+ACIT4420-1 20H
+Student
+9 Sep at 18:10
+11:52:55
+Kassahun Gedlu Degena
+Kassahun Gedlu Degena	s341460@oslomet.no	fs:215:940051	
+ACIT4420-1 20H
+Student
+10 Sep at 10:41
+04:42:54
+Solomon Legesse Desalegn
+Solomon Legesse Desalegn	s166126@oslomet.no	fs:215:566546	
+ACIT4420-1 20H
+Student
+8 Sep at 11:39
+01:27:18
+Sujan Devkota
+Sujan Devkota	s339971@oslomet.no	fs:215:938938	
+ACIT4420-1 20H
+Student
+13 Sep at 14:40
+03:02:35
+Marta Ewa Dubas
+Marta Ewa Dubas	s356469@oslomet.no	fs:215:566409	
+ACIT4420-1 20H
+Student
+14 Sep at 9:05
+13:06:09
+Patrick Ellefsen
+Patrick Ellefsen	s325920@oslomet.no	fs:215:841188	
+ACIT4420-1 20H
+Student
+13 Sep at 14:11
+04:07:00
+Lars Iver Erdal-Aase
+Lars Iver Erdal-Aase	s198759@oslomet.no	fs:215:576174	
+ACIT4420-1 20H
+Student
+28 Aug at 1:11
+58:53
+Laszlo Erdodi
+Laszlo Erdodi	laszloer@oslomet.no	fs:215:994874	
+ACIT4420-1 20H
+Teacher
+14 Sep at 10:07
+08:11:47
+John Inge Erlandsen
+John Inge Erlandsen	s346664@oslomet.no	fs:215:801068	
+ACIT4420-1 20H
+Student
+30 Aug at 12:02
+01:12:59
+Jan Andre Fagereng
+Jan Andre Fagereng	s182417@oslomet.no	fs:215:478001	
+ACIT4420-1 20H
+Student
+14 Sep at 9:25
+03:12:41
+Jørgen Jensen Farner
+Jørgen Jensen Farner	s310338@oslomet.no	fs:215:820602	
+ACIT4420-1 20H
+Student
+11 Sep at 9:30
+39:24:19
+Martina Rebekka Førre
+Martina Rebekka Førre	s235401@oslomet.no	fs:215:659802	
+ACIT4420-1 20H
+Student
+12 Sep at 12:47
+08:12:20
+Felix Fritz
+Felix Fritz	s321045@oslomet.no	fs:215:773252	
+ACIT4420-1 20H
+Student
+13 Sep at 22:57
+10:29:01
+Ragnhild Skirdal Frøhaug
+Ragnhild Skirdal Frøhaug	s350110@oslomet.no	fs:215:1042316	
+ACIT4420-1 20H
+Student
+14 Sep at 8:20
+02:22:16
+Vasavi Ganugapeta
+Vasavi Ganugapeta	s173307@oslomet.no	fs:215:400857	
+ACIT4420-1 20H
+Student
+14 Sep at 8:30
+12:03:51
+Robel Michael Gebregergis
+Robel Michael Gebregergis	s348002@oslomet.no	fs:215:1012135	
+ACIT4420-1 20H
+Student
+13 Sep at 16:37
+50:10:44
+Mhd Tarek Mhd Roshdi Ghazal
+Mhd Tarek Mhd Roshdi Ghazal	s356066@oslomet.no	fs:215:966087	
+ACIT4420-1 20H
+Student
+13 Sep at 23:13
+35:39:54
+Marit Øye Gjersdal
+Marit Øye Gjersdal	s348588@oslomet.no	fs:215:1031718	
+ACIT4420-1 20H
+Student
+11 Sep at 16:47
+07:03:07
+Tom Glover
+Tom Glover	tomglove@oslomet.no	fs:215:1000799	
+ACIT4420-1 20H
+Teacher
+12 Sep at 0:12
+39:32:00
+Anders Berg Gorboe
+Anders Berg Gorboe	s319482@oslomet.no	fs:215:836987	
+ACIT4420-1 20H
+Student
+14 Sep at 8:33
+04:56:43
+Ola Græsli
+Ola Græsli	s234031@oslomet.no	fs:215:654861	
+ACIT4420-1 20H
+Student
+14 Sep at 9:16
+32:51:56
+Odin Kanstad Grimstvedt
+Odin Kanstad Grimstvedt	s349473@oslomet.no	fs:215:842019	
+ACIT4420-1 20H
+Student
+9 Sep at 10:28
+01:08:40
+Shashank Gupta
+Shashank Gupta	s341467@oslomet.no	fs:215:947531	
+ACIT4420-1 20H
+Student
+9 Sep at 14:22
+02:42:58
+Alexander William Ingvarsson Hals
+Alexander William Ingvarsson Hals	s315740@oslomet.no	fs:215:714785	
+ACIT4420-1 20H
+Student
+13 Sep at 17:08
+24:15:49
+Solvor Horrig Helland
+Solvor Horrig Helland	solvorho@oslomet.no	fs:215:107290	
+ACIT4420-1 20H
+Teacher
+12 Aug at 10:47
+Jon-Olav Holland
+Jon-Olav Holland	s349009@oslomet.no	fs:215:1045598	
+ACIT4420-1 20H
+Student
+14 Sep at 0:10
+06:16:09
+Marius Hornslien
+Marius Hornslien	s356550@oslomet.no	fs:215:1068171	
+ACIT4420-1 20H
+Student
+9 Sep at 11:21
+53:46
+Chaudhry Rehan Ikram
+Chaudhry Rehan Ikram	s351659@oslomet.no	fs:215:996247	
+ACIT4420-1 20H
+Student
+9 Sep at 18:18
+03:20:33
+Asim Irshad
+Asim Irshad	s340018@oslomet.no	fs:215:943307	
+ACIT4420-1 20H
+Student
+Muhammad Anwar Ul Haq Islam
+Muhammad Anwar Ul Haq Islam	s351646@oslomet.no	fs:215:1003814	
+ACIT4420-1 20H
+Student
+Nazrul Islam
+Nazrul Islam	s331043@oslomet.no	fs:215:911736	
+ACIT4420-1 20H
+Student
+14 Sep at 8:08
+06:39:55
+Christian Ruben Alexander Jahren
+Christian Ruben Alexander Jahren	s310455@oslomet.no	fs:215:730685	
+ACIT4420-1 20H
+Student
+14 Sep at 10:05
+19:04:03
+Tara Jørgensen
+Tara Jørgensen	s314769@oslomet.no	fs:215:792905	
+ACIT4420-1 20H
+Student
+11 Sep at 15:07
+01:58:44
+Hitesh Mohan Kaushik
+Hitesh Mohan Kaushik	s336602@oslomet.no	fs:215:927864	
+ACIT4420-1 20H
+Student
+10 Sep at 8:54
+07:31
+Elias Khan
+Elias Khan	s351645@oslomet.no	fs:215:728310	
+ACIT4420-1 20H
+Student
+13 Sep at 17:32
+13:00:09
+Rameen Jamshaid Khan
+Rameen Jamshaid Khan	s319470@oslomet.no	fs:215:833283	
+ACIT4420-1 20H
+Student
+21 Aug at 12:04
+05:16
+Magnus Kjelsaas
+Magnus Kjelsaas	s319496@oslomet.no	fs:215:833562	
+ACIT4420-1 20H
+Student
+9 Sep at 15:55
+08:02:05
+Boushra Kolko
+Boushra Kolko	s345532@oslomet.no	fs:215:970370	
+ACIT4420-1 20H
+Student
+19 Aug at 11:52
+Martin Kot
+Martin Kot	s108343@oslomet.no	fs:215:90910	
+ACIT4420-1 20H
+Student
+Josef Jan Krivan
+Josef Jan Krivan	s315310@oslomet.no	fs:215:814316	
+ACIT4420-1 20H
+Student
+10 Sep at 0:04
+03:21:43
+Pawel Michal Kur
+Pawel Michal Kur	s169909@oslomet.no	fs:215:389641	
+ACIT4420-1 20H
+Student
+12 Sep at 0:12
+02:05:44
+Piotr Jan Kusnierz
+Piotr Jan Kusnierz	s326178@oslomet.no	fs:215:838008	
+ACIT4420-1 20H
+Student
+27 Aug at 15:11
+09:01
+Denis Larsen
+Denis Larsen	s325936@oslomet.no	fs:215:787808	
+ACIT4420-1 20H
+Student
+10 Sep at 0:29
+04:05:09
+Monica Sofie Larsen
+Monica Sofie Larsen	s150048@oslomet.no	fs:215:258328	
+ACIT4420-1 20H
+Student
+19 Aug at 13:12
+Thomas Leirvik
+Thomas Leirvik	s351653@oslomet.no	fs:215:1045230	
+ACIT4420-1 20H
+Student
+10 Sep at 8:13
+12:07
+Ludvik Karlsson Lund
+Ludvik Karlsson Lund	s309855@oslomet.no	fs:215:783125	
+ACIT4420-1 20H
+Student
+10 Sep at 22:01
+01:01:03
+Mathias Hanstad Lundby
+Mathias Hanstad Lundby	s326166@oslomet.no	fs:215:862407	
+ACIT4420-1 20H
+Student
+13 Sep at 17:43
+02:46:31
+Assem Maratova
+Assem Maratova	s351654@oslomet.no	fs:215:1029529	
+ACIT4420-1 20H
+Student
+10 Sep at 21:15
+01:32:46
+Nora Alexandra Cordasevschi Marcoux
+Nora Alexandra Cordasevschi Marcoux	s349030@oslomet.no	fs:215:660102	
+ACIT4420-1 20H
+Student
+13 Sep at 17:54
+16:00:07
+Meraj Mostamand Kashi
+Meraj Mostamand Kashi	s356478@oslomet.no	fs:215:940801	
+ACIT4420-1 20H
+Student
+14 Sep at 10:00
+09:44:35
+Ahmed Mustafa
+Ahmed Mustafa	s341357@oslomet.no	fs:215:942722	
+ACIT4420-1 20H
+Student
+Rashmi Ganapati Naik
+Rashmi Ganapati Naik	s351663@oslomet.no	fs:215:993850	
+ACIT4420-1 20H
+Student
+13 Sep at 13:03
+05:25:42
+Irfanullah Nazand
+Irfanullah Nazand	s309731@oslomet.no	fs:215:786909	
+ACIT4420-1 20H
+Student
+2 Sep at 23:36
+02:35:13
+Joyce Ndalaye
+Joyce Ndalaye	s339955@oslomet.no	fs:215:942125	
+ACIT4420-1 20H
+Student
+11 Sep at 11:12
+27:27:45
+Ole André Østvold
+Ole André Østvold	s319483@oslomet.no	fs:215:836235	
+ACIT4420-1 20H
+Student
+14 Sep at 3:24
+01:18:51
+Pål Anders Wangen Owren
+Pål Anders Wangen Owren	s333704@oslomet.no	fs:215:906775	
+ACIT4420-1 20H
+Student
+13 Sep at 20:29
+21:14:30
+Rabin Parajuli
+Rabin Parajuli	s329925@oslomet.no	fs:215:879428	
+ACIT4420-1 20H
+Student
+12 Sep at 15:01
+10:21:27
+OMID PARSA MEHR
+OMID PARSA MEHR	s339974@oslomet.no	fs:215:940949	
+ACIT4420-1 20H
+Student
+9 Sep at 11:45
+37:32
+Fredrik Haugerud Pedersen
+Fredrik Haugerud Pedersen	s306631@oslomet.no	fs:215:710796	
+ACIT4420-1 20H
+Student
+10 Sep at 9:57
+01:41:52
+Darius Grigore Pop
+Darius Grigore Pop	s351662@oslomet.no	fs:215:1038950	
+ACIT4420-1 20H
+Student
+14 Sep at 8:47
+06:27:05
+Nourhan Ragab
+Nourhan Ragab	s351643@oslomet.no	fs:215:657334	
+ACIT4420-1 20H
+Student
+12 Sep at 21:33
+17:17:58
+Ivar Ekholt Røise
+Ivar Ekholt Røise	s148181@oslomet.no	fs:215:256526	
+ACIT4420-1 20H
+Student
+19 Aug at 14:23
+44:24
+Olav Hartvig Breivik Rui
+Olav Hartvig Breivik Rui	s306386@oslomet.no	fs:215:674457	
+ACIT4420-1 20H
+Student
+13 Sep at 18:38
+23:46:18
+Maria Safdar
+Maria Safdar	s193352@oslomet.no	fs:215:524562	
+ACIT4420-1 20H
+Student
+11 Sep at 11:12
+09:05
+Abdulkarim shlal
+Abdulkarim shlal	s350144@oslomet.no	fs:215:1029574	
+ACIT4420-1 20H
+Student
+9 Sep at 11:40
+03:03:24
+Linett Simonsen
+Linett Simonsen	s324031@oslomet.no	fs:215:429476	
+ACIT4420-1 20H
+Student
+13 Sep at 14:18
+03:47:15
+Brage Skjønborg
+Brage Skjønborg	s326311@oslomet.no	fs:215:844909	
+ACIT4420-1 20H
+Student
+9 Sep at 9:57
+22:20:01
+Tine-Lovise Storvoll
+Tine-Lovise Storvoll	s325964@oslomet.no	fs:215:846932	
+ACIT4420-1 20H
+Student
+9 Sep at 18:40
+08:00:35
+Matrika Subedi
+Matrika Subedi	s331042@oslomet.no	fs:215:905337	
+ACIT4420-1 20H
+Student
+12 Sep at 23:51
+02:20:24
+Lise Estelle Prat Sundrønning
+Lise Estelle Prat Sundrønning	s305345@oslomet.no	fs:215:655483	
+ACIT4420-1 20H
+Student
+11 Sep at 0:07
+59:31:59
+Øystein Aune Sverre
+Øystein Aune Sverre	s326287@oslomet.no	fs:215:847106	
+ACIT4420-1 20H
+Student
+9 Sep at 12:24
+01:10:11
+Samaneh Taghizadeh
+Samaneh Taghizadeh	s351661@oslomet.no	fs:215:1045760	
+ACIT4420-1 20H
+Student
+14 Sep at 9:35
+15:06:37
+Tahzeena Asif Tandel
+Tahzeena Asif Tandel	s350284@oslomet.no	fs:215:1012859	
+ACIT4420-1 20H
+Student
+13 Sep at 23:50
+08:20:06
+Øivind Thorrud
+Øivind Thorrud	s315695@oslomet.no	fs:215:797646	
+ACIT4420-1 20H
+Student
+13 Sep at 20:11
+05:36
+Kaniz Fatema Tuly
+Kaniz Fatema Tuly	s351655@oslomet.no	fs:215:1037937	
+ACIT4420-1 20H
+Student
+14 Sep at 0:32
+08:39:45
+Ramesh Upreti
+Ramesh Upreti	s237418@oslomet.no	fs:215:627444	
+ACIT4420-1 20H
+ACIT4420-1 20H
+Student
+TA
+11 Sep at 13:11
+11 Sep at 13:11
+07:33:17
+Håkon Weydahl
+Håkon Weydahl	s180063@oslomet.no	fs:215:422770	
+ACIT4420-1 20H
+Student
+14 Sep at 9:00
+01:25:41
+Beebu Nisha Yasar Arafath
+Beebu Nisha Yasar Arafath	s351644@oslomet.no	fs:215:1010700	
+ACIT4420-1 20H
+Student
+13 Sep at 23:06
+41:38:02
+Syeda Ambreen Yawar
+Syeda Ambreen Yawar	s345523@oslomet.no	fs:215:955355	
+ACIT4420-1 20H
+Student
+13 Sep at 18:05
+17:26:33
+Shayan Yazdanmehr
+Shayan Yazdanmehr	s349363@oslomet.no	fs:215:1044916	
+ACIT4420-1 20H
+Student
+13 Sep at 19:20
+09:28:22
+Anis Yazidi
+Anis Yazidi	anisy@oslomet.no	fs:215:624019	
+ACIT4420-1 20H
+Teacher
+13 Aug at 12:46
+02:00
+Nimra Zainab
+Nimra Zainab	s355988@oslomet.no	fs:215:1006040	
+ACIT4420-1 20H
+Student
+13 Sep at 21:59
+09:11:00
+Mahshidsadat Zolfaghariejlalmanesh
+Mahshidsadat Zolfaghariejlalmanesh	s351657@oslomet.no	fs:215:1032851	
+ACIT4420-1 20H
+Student
+13 Sep at 16:57
+07:59:54
