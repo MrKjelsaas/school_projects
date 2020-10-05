@@ -2,9 +2,12 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from random import random
+<<<<<<< HEAD
 from scipy.stats import pearsonr
 
 
+=======
+>>>>>>> d85cf1b5c83d17c61dce3c15a51365b44bffdb03
 
 
 # Essential variables
@@ -12,6 +15,7 @@ sampling_rate = 10000
 dt = 1/sampling_rate
 refractory_period = 0
 learning_rate = 0.05  # Number between 0 and 1
+<<<<<<< HEAD
 minutes_to_sample = 1
 number_of_steps = minutes_to_sample*60*sampling_rate  # Each recording lasts 30 min
 number_of_electrodes = 60
@@ -76,6 +80,19 @@ for i in range(number_of_electrodes-1):
 for i in range(number_of_electrodes-1):
     for j in range(i+1, number_of_electrodes):
         network.add_edge(i, j, weight=pearsonr(spike_trains[i, :], spike_trains[j, :])[0])
+=======
+number_of_steps = 30*60*sampling_rate  # Each recording lasts 30 min
+
+# Make a network with 59 nodes
+network = nx.Graph()
+for n in range(60):
+    network.add_node(n)
+
+# Add weighted edges between all nodes
+for i in range(60):
+    for j in range(i+1, 60):
+        network.add_edge(i, j, weight=random())
+>>>>>>> d85cf1b5c83d17c61dce3c15a51365b44bffdb03
 
 # Set initial firing state
 nx.set_node_attributes(network, 0, 'firing')
@@ -92,6 +109,7 @@ for edge in network.edges(0):
     pass
     #print(edge[1])
 
+<<<<<<< HEAD
 # Update weights
 #network[0][59]['weight'] += (1-network[0][59]['weight']) * learning_rate
 
@@ -128,6 +146,26 @@ nx.draw_networkx_edges(network, pos=position, edgelist=e10, alpha = 1)
 
 #nx.draw(network, pos=nx.circular_layout(network))
 plt.show()
+=======
+
+
+
+"""
+# Update weights
+print(network[0][59]['weight'])
+for i in range(10):
+    network[0][59]['weight'] += (1-network[0][59]['weight']) * learning_rate
+    print(network[0][59]['weight'])
+"""
+
+
+
+"""
+# Visualize the network
+nx.draw(network)
+plt.show()
+"""
+>>>>>>> d85cf1b5c83d17c61dce3c15a51365b44bffdb03
 
 
 
@@ -136,6 +174,23 @@ plt.show()
 
 
 
+<<<<<<< HEAD
+=======
+# Import the data
+data = np.loadtxt(r"Data/Dense - 2-1-20.spk.txt")
+#print(np.size(data))
+#print(np.shape(data))
+
+# Count the number of times each neuron fires
+times_fired_in_experiment = np.zeros([60])
+for n in range(len(data)):
+    times_fired_in_experiment[int(data[n, 1])-1] += 1
+#print(times_fired_in_experiment)
+
+# Count the average firing rates
+average_firing_rates_in_experiment = 1 / (times_fired_in_experiment / data[-1, 0])
+#print(average_firing_rates_in_experiment)
+>>>>>>> d85cf1b5c83d17c61dce3c15a51365b44bffdb03
 
 
 
