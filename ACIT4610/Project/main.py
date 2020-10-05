@@ -22,12 +22,21 @@ for i in range(60):
         network.add_edge(i, j, weight=random())
 
 # Set initial firing state
-nx.set_node_attributes(network, 0, 'Firing')
-print(network.nodes[0])
+nx.set_node_attributes(network, 0, 'firing')
+#print(network.nodes[0])
+
 # Change firing state
-network.nodes[0]['Firing'] = 1
-print(network.nodes[0])
-network.nodes[0]['Firing'] = 0
+network.nodes[0]['firing'] = 1
+#print(network.nodes[0])
+network.nodes[0]['firing'] = 0
+#print("Node 0 firing status:", network.nodes[0]['firing'])
+
+# Iterate over all neighbors of a node
+for edge in network.edges(0):
+    pass
+    #print(edge[1])
+
+
 
 
 """
@@ -65,6 +74,9 @@ for n in range(len(data)):
 #print(times_fired_in_experiment)
 
 # Count the average firing rates
+average_firing_rates_in_experiment = 1 / (times_fired_in_experiment / data[-1, 0])
+#print(average_firing_rates_in_experiment)
+
 
 
 """
