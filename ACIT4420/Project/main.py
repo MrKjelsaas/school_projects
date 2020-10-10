@@ -24,13 +24,16 @@ from bs4 import BeautifulSoup
 def find_all_URLs(URL):
     try:
         found_URLs = []
-        result = requests.get(URL)
+        try:
+            result = requests.get(URL, timeout=5)
+        except:
+            return []
         URL_soup = BeautifulSoup(result.content, 'html.parser')
 
         for URL in URL_soup.find_all('a'):
             link = URL.get('href')
             try:
-                if link[0:4] != "http":
+                if link[:4] != "http":
                     continue
                 if link in found_URLs:
                     continue
@@ -80,7 +83,7 @@ while valid_url is False:
         start_url = "http://www." + start_url
 
     try:
-        start_URL_result = requests.get(start_url)
+        start_URL_result = requests.get(start_url, timeout=5)
         valid_url = True
     except:
         print("Invalid URL, please try again")
@@ -158,8 +161,6 @@ print("\n\n")
 
 print("Number of URLs found:")
 print(len(URL_list))
-
-
 
 
 
