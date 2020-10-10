@@ -21,6 +21,44 @@ The program should provide the following features:
 import requests
 from bs4 import BeautifulSoup
 
+def find_all_URLs(URL):
+    try:
+        found_URLs = []
+        result = requests.get(URL)
+        URL_soup = BeautifulSoup(result.content, 'html.parser')
+
+        for URL in URL_soup.find_all('a'):
+            link = URL.get('href')
+            try:
+                if link[0:4] != "http":
+                    continue
+                if link in found_URLs:
+                    continue
+                if link[-4:] == ".pdf":
+                    continue
+                if link[-4:] == ".jpg":
+                    continue
+                if link[-4:] == ".zip":
+                    continue
+                if link[-5:] == ".docx":
+                    continue
+
+                found_URLs.append(URL.get('href'))
+            except:
+                pass
+
+        return found_URLs
+
+    except:
+        return []
+
+print_url_checking = True
+
+
+
+
+
+
 
 # Create a python project that is able to download websites and capture sensitive data on the site
 print("\n-----\n\nWelcome to my web crawler")
@@ -42,7 +80,7 @@ while valid_url is False:
         start_url = "http://www." + start_url
 
     try:
-        result = requests.get(start_url)
+        start_URL_result = requests.get(start_url)
         valid_url = True
     except:
         print("Invalid URL, please try again")
@@ -68,12 +106,64 @@ user_defined_regexes = []
 inputting_defined_regexes_is_done = False
 while inputting_defined_regexes_is_done == False:
     regex_input = str(input("Please enter a word to look for (leave blank to finish): "))
-    if len(regex_input) != 0:
+    if len(regex_input) > 0:
         user_defined_regexes.append(regex_input)
     if len(regex_input) == 0:
         inputting_defined_regexes_is_done = True
 
 del inputting_defined_regexes_is_done
+
+
+
+
+
+print("\nAnd thus commences the crawl\n\n")
+
+# Make a list of URLs to visit
+URL_list = []
+
+debth_crawled = 0
+
+next_debth_URLs = [start_url]
+
+while debth_crawled < crawl_debth + 1:
+    found_URLs = []
+    for url in next_debth_URLs:
+        if print_url_checking == True:
+            print("Now checking:", url)
+
+        for found_url in find_all_URLs(url):
+            if found_url not in found_URLs:
+                if found_url not in next_debth_URLs:
+                    found_URLs.append(found_url)
+
+    for url in next_debth_URLs:
+        if url not in URL_list:
+            URL_list.append(url)
+
+    next_debth_URLs = found_URLs
+
+    for url in next_debth_URLs:
+        if url not in URL_list:
+            URL_list.append(url)
+
+    debth_crawled += 1
+
+
+
+
+print("\n\nDone crawling\n")
+
+print("\n\n")
+
+print("Number of URLs found:")
+print(len(URL_list))
+
+
+
+
+
+
 
 
 
