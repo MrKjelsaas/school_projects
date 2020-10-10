@@ -73,6 +73,7 @@ while inputting_defined_regexes_is_done == False:
     if len(regex_input) == 0:
         inputting_defined_regexes_is_done = True
 
+del inputting_defined_regexes_is_done
 
 
 
