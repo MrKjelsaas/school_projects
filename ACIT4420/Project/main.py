@@ -114,7 +114,7 @@ inputting_defined_regexes_is_done = False
 while inputting_defined_regexes_is_done == False:
     regex_input = str(input("Please enter a word to look for (leave blank to finish): "))
     if len(regex_input) > 0:
-        user_defined_regexes.append(regex_input)
+        user_defined_regexes.append(regex_input.lower())
     if len(regex_input) == 0:
         inputting_defined_regexes_is_done = True
 
@@ -124,7 +124,7 @@ del inputting_defined_regexes_is_done
 
 
 
-print("\nAnd thus commences the crawl\n\n")
+print("\nAnd thus commences the crawl\n")
 
 # Make a list of URLs to visit
 URLs_to_crawl = [] # The URLs that we are going to scrape for info (email, phone number, etc.)
@@ -133,8 +133,6 @@ debth_crawled = 0
 
 print("Starting to look for URLs...\n")
 while debth_crawled < crawl_debth + 1:
-
-
     found_URLs = [] # The list of URLs that are found during the current debth of the search
 
     for url in next_debth_URLs:
@@ -157,8 +155,11 @@ while debth_crawled < crawl_debth + 1:
 
 print("\n\nDone looking for URLs\n")
 
-print("Number of URLs found:")
-print(len(found_URLs))
+total_URLs_found = len(URLs_to_crawl)
+for n in range(len(next_debth_URLs)):
+    if next_debth_URLs[n] not in URLs_to_crawl:
+        total_URLs_found += 1
+print("Number of URLs found:", total_URLs_found)
 print("\n\n")
 
 
@@ -195,15 +196,13 @@ for url in URLs_to_crawl:
                     if nameholder == list_of_words_found[n][0]:
                         list_of_words_found[n][1] += 1
                         break
-                    if n == len(list_of_words_found)-1:
+                    elif n == len(list_of_words_found)-1:
                         list_of_words_found.append([nameholder, 1])
-                        break
             elif len(list_of_words_found) == 0:
                 list_of_words_found.append([nameholder, 1])
 
 print("\nFinished finding words in URLs\n")
 
-print("")
 print("\nNumber of words found:", len(list_of_words_found))
 
 words_with_more_than_one_occurence = 0
@@ -212,17 +211,23 @@ for word, amount in list_of_words_found:
         words_with_more_than_one_occurence += 1
 print("Words with more than one occurence:", words_with_more_than_one_occurence)
 
-
-
 print("\nNumber of URLs scraped:", len(URLs_to_crawl), "\n")
 
 
 
+print("\nLooking for user defined regexes\n")
+occurence_of_user_regexes = []
+for regex in user_defined_regexes:
+    occurence_of_user_regexes.append([regex, 0])
 
+for i in range(len(user_defined_regexes)):
+    for j in range(len(list_of_words_found)):
+        if list_of_words_found[j][0] == user_defined_regexes[i]:
+            occurence_of_user_regexes[i][1] = list_of_words_found[j][1]
+            break
 
-
-
-
+for user_regex, occurence in occurence_of_user_regexes:
+    print(user_regex, "occured", occurence, "times")
 
 
 
