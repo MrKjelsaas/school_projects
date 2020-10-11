@@ -10,7 +10,7 @@ The program has to accept the following parameters:
 - User defined regular expressions to find sensitive data
 
 The program should provide the following features:
-- Download the website from the provided URL, identify links inside the source code and download all website subpages that are linked until the maximum number of jumps are not reached
+- Download the website from the provided URL, identify links inside the source code and download all website subpages that are linked until the maximum number of jumps are reached
 - Identify email addresses and phone numbers and create a list of the captured values
 - Identify comments inside the source code and make a list of them indicating the file name and line number of the comment
 - Identify special data using the user provided regular expression
@@ -20,6 +20,8 @@ The program should provide the following features:
 
 import requests
 from bs4 import BeautifulSoup
+import re
+import string
 
 def find_all_URLs(URL):
     try:
@@ -55,7 +57,9 @@ def find_all_URLs(URL):
     except:
         return []
 
-print_url_checking = True
+# Set to True to output which URL is being searched
+print_url_checking = False
+print_scraping = False
 
 
 
@@ -123,45 +127,94 @@ del inputting_defined_regexes_is_done
 print("\nAnd thus commences the crawl\n\n")
 
 # Make a list of URLs to visit
-URL_list = []
-
+URLs_to_crawl = [] # The URLs that we are going to scrape for info (email, phone number, etc.)
+next_debth_URLs = [start_url] # The next URLs we are going to look for URLs in
 debth_crawled = 0
 
-next_debth_URLs = [start_url]
-
+print("Starting to look for URLs...\n")
 while debth_crawled < crawl_debth + 1:
-    found_URLs = []
+
+
+    found_URLs = [] # The list of URLs that are found during the current debth of the search
+
     for url in next_debth_URLs:
         if print_url_checking == True:
-            print("Now checking:", url)
+            print("Finding URLs in:", url)
 
-        for found_url in find_all_URLs(url):
+        for found_url in find_all_URLs(url): # Finds URLs on a page and appends them if it's not already found
             if found_url not in found_URLs:
                 if found_url not in next_debth_URLs:
-                    found_URLs.append(found_url)
+                    if found_url not in URLs_to_crawl:
+                        found_URLs.append(found_url)
 
     for url in next_debth_URLs:
-        if url not in URL_list:
-            URL_list.append(url)
+        if url not in URLs_to_crawl:
+            URLs_to_crawl.append(url)
 
-    next_debth_URLs = found_URLs
-
-    for url in next_debth_URLs:
-        if url not in URL_list:
-            URL_list.append(url)
+    next_debth_URLs = found_URLs # These are the URLs we are going to scrape if we're going another level deeper
 
     debth_crawled += 1
 
-
-
-
-print("\n\nDone crawling\n")
-
-print("\n\n")
+print("\n\nDone looking for URLs\n")
 
 print("Number of URLs found:")
-print(len(URL_list))
+print(len(found_URLs))
+print("\n\n")
 
+
+
+
+
+print("Starting to scrape the found URLs\n")
+valid_symbols = string.ascii_lowercase + "æøå" + "'" + "-"  # We assume that all words only contain latin letters and dashes and apostrophes
+list_of_words_found = []
+
+for url in URLs_to_crawl:
+    try:
+        result = requests.get(url, timeout=5)
+    except:
+        pass
+    URL_soup = BeautifulSoup(result.content, 'html.parser')
+
+    if print_scraping == True:
+        print("Now scraping:", url)
+
+    URL_text = URL_soup.get_text().split()
+
+    for word in URL_text:
+        nameholder = ""
+        for character in word:
+            if character.lower() in valid_symbols:
+                nameholder += character.lower()
+            else:
+                nameholder = ""
+                break
+        if len(nameholder) > 0:
+            if len(list_of_words_found) > 0:
+                for n in range(len(list_of_words_found)):
+                    if nameholder == list_of_words_found[n][0]:
+                        list_of_words_found[n][1] += 1
+                        break
+                    if n == len(list_of_words_found)-1:
+                        list_of_words_found.append([nameholder, 1])
+                        break
+            elif len(list_of_words_found) == 0:
+                list_of_words_found.append([nameholder, 1])
+
+print("\nFinished finding words in URLs\n")
+
+print("")
+print("\nNumber of words found:", len(list_of_words_found))
+
+words_with_more_than_one_occurence = 0
+for word, amount in list_of_words_found:
+    if amount > 1:
+        words_with_more_than_one_occurence += 1
+print("Words with more than one occurence:", words_with_more_than_one_occurence)
+
+
+
+print("\nNumber of URLs scraped:", len(URLs_to_crawl), "\n")
 
 
 
