@@ -14,12 +14,12 @@ seconds_to_sample = int(minutes_to_sample * 60)
 number_of_steps = seconds_to_sample*sampling_rate  # Each recording lasts ca 45 min
 generations = number_of_steps
 number_of_electrodes = 60
-training_iterations = 5
+training_iterations = 50
 
 refractory_period = 3
-firing_threshold = 1
+firing_threshold = 10
 learning_rate = 0.2  # Number between 0 and 1
-initial_charge = 0.1
+#initial_charge = 0.1
 background_noise = 0.01
 
 
@@ -71,12 +71,15 @@ data = np.loadtxt(r"Data/Dense - 2-1-20.spk.txt")
 
 # Count the number of times each neuron fires
 times_fired_in_experiment = np.zeros([number_of_electrodes])
+initial_charges = np.zeros([number_of_electrodes])
 for n in range(len(data)):
     if data[n, 0] > seconds_to_sample:
         break
     times_fired_in_experiment[int(data[n, 1])-1] += 1
+self_charges = np.zeros([number_of_electrodes])
+for n in range(number_of_electrodes):
+    self_charges[n] = times_fired_in_experiment[n] / sum(times_fired_in_experiment)
 #print(times_fired_in_experiment)
-
 # Count the average firing rates
 average_firing_rates_in_experiment = 1 / (times_fired_in_experiment / seconds_to_sample)
 #print(average_firing_rates_in_experiment)
@@ -152,9 +155,8 @@ nx.set_node_attributes(network, 0, 'firing')
 # Counts the number of times the node is fired
 nx.set_node_attributes(network, 0, 'times_fired')
 
-
 # Set initial charge
-nx.set_node_attributes(network, initial_charge, 'charge')
+nx.set_node_attributes(network, 0, 'charge')
 
 # Set one random node to fire
 #network.nodes[int(np.round(random()*number_of_electrodes))]['firing'] = 1
@@ -170,9 +172,11 @@ FIRING
 """
 
 for iteration in range(training_iterations):
-    print("Starting iteration", iteration)
+    print("Starting iteration", iteration+1)
+    print("Firing threshold:", firing_threshold)
 
-    nx.set_node_attributes(network, initial_charge, 'charge')
+    for node in range(number_of_electrodes):
+        network.nodes[node]['charge'] = initial_charges[n]
     times_fired_in_network = np.zeros([number_of_electrodes])
 
     # Placeholder for the next charges
@@ -194,11 +198,11 @@ for iteration in range(training_iterations):
                     next_firings[node] = 1
                     times_fired_in_network[node] += 1
                 else:
-                    next_charges[node] = network.nodes[node]['charge'] + random()/1000 # + background_noise
+                    next_charges[node] = network.nodes[node]['charge'] + self_charges[node]
                     for neighbor in range(number_of_electrodes):
                         if node != neighbor:
                             if network.nodes[neighbor]['firing'] == 1:
-                                next_charges[node] += network[node][neighbor]['weight']
+                                next_charges[node] += network[neighbor][node]['weight']
         for node in range(number_of_electrodes):
             network.nodes[node]['firing'] = next_firings[node]
             network.nodes[node]['charge'] = next_charges[node]
@@ -221,20 +225,37 @@ for iteration in range(training_iterations):
     print("\nTimes fired in network:\n", times_fired_in_network)
     print("\n")
 
+    if sum(times_fired_in_network) > sum(times_fired_in_experiment):
+        firing_threshold *= 1.2
+    else:
+        firing_threshold *= 0.8
+
     #gradients = times_fired_in_network - times_fired_in_experiment
     gradients = np.zeros([number_of_electrodes])
     #print("Gradients:")
     #print(gradients)
     for gradient in range(len(gradients)):
         if times_fired_in_network[gradient] < times_fired_in_experiment[gradient]:
-            gradients[gradient] = 1 + (times_fired_in_network[gradient] / times_fired_in_experiment[gradient]) * learning_rate
+            gradients[gradient] = 1 + learning_rate # 1 + (times_fired_in_network[gradient] / times_fired_in_experiment[gradient])
         elif times_fired_in_network[gradient] > times_fired_in_experiment[gradient]:
-            gradients[gradient] = 1 - (times_fired_in_experiment[gradient] / times_fired_in_network[gradient]) * learning_rate
+            gradients[gradient] = 1 - learning_rate # 1 - (times_fired_in_experiment[gradient] / times_fired_in_network[gradient])
 
     for i in range(number_of_electrodes):
         for j in range(number_of_electrodes):
             if i != j:
-                network[i][j]['weight'] *= gradients[i]
+                network[j][i]['weight'] *= gradients[i]
+
+
+
+"""
+--------------------------------------------
+VISUALIZATION
+--------------------------------------------
+"""
+
+
+
+
 
 
 
