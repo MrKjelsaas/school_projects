@@ -253,7 +253,7 @@ VISUALIZATION
 --------------------------------------------
 """
 
-
+show_network(network)
 
 
 
