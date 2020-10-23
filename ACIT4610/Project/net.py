@@ -10,12 +10,13 @@ from copy import deepcopy
 number_of_electrodes = 60
 sampling_rate = 1000
 dt = 1/sampling_rate
-minutes_to_sample = 10/60
+minutes_to_sample = 5/60
 seconds_to_sample = int(minutes_to_sample * 60)
 number_of_steps = seconds_to_sample*sampling_rate  # Each recording lasts ca 45 min
 generations = number_of_steps
 training_iterations = 1000
 initial_threshold = 100
+initial_self_charge = 0.1
 
 
 
@@ -30,7 +31,7 @@ def mutate(x, method="random"):
         return x * (random() + 0.5)
     if method == "add_node":
         x.add_node(x.number_of_nodes(), charge=0, firing=0, threshold = initial_threshold,
-                    refraction_period = 4, chance_of_self_poke = 10, times_fired=0)
+                    refraction_period = 4, self_charge = initial_self_charge, times_fired=0)
         return x
     if method == "add_edge":
         x.add_edge(randint(0, x.number_of_nodes()-1), randint(0, x.number_of_nodes()-1), weight=1)
@@ -53,7 +54,7 @@ def initialize(): # add atributes for evo
     network = nx.Graph()
     for n in range(number_of_electrodes):
         network.add_node(n, charge=0, firing=0, threshold = initial_threshold,
-                        refraction_period = 4, chance_of_self_poke = 10, times_fired=0)
+                        refraction_period = 4, self_charge = initial_self_charge, times_fired=0)
 
     #Create all nodes, bi directional = 3600
     for i in range(number_of_electrodes):
@@ -81,9 +82,7 @@ def fire(network):
             if network.nodes[node]['charge'] > network.nodes[node]['threshold']:
                 next_firings[node] = 1
             else:
-                next_charges[node] = network.nodes[node]['charge']
-                if random()*100 > network.nodes[node]['chance_of_self_poke']:
-                    next_charges[node] += random()
+                next_charges[node] = network.nodes[node]['charge'] + network.nodes[node]['self_charge']
                 for neighbor in range(number_of_electrodes):
                     if node != neighbor:
                         if network.nodes[neighbor]['firing'] == 1:
@@ -171,7 +170,7 @@ for mutated_network in mutated_networks:
     if attribute_to_evolve == 2:
         mutated_network.nodes[node_to_evolve]["refraction_period"] = mutate(mutated_network.nodes[node_to_evolve]["refraction_period"])
     if attribute_to_evolve == 3:
-        mutated_network.nodes[node_to_evolve]["chance_of_self_poke"] = mutate(mutated_network.nodes[node_to_evolve]["chance_of_self_poke"])
+        mutated_network.nodes[node_to_evolve]["self_charge"] = mutate(mutated_network.nodes[node_to_evolve]["self_charge"])
     if attribute_to_evolve == 4:
         neighbor_to_evolve = randint(0, 59)
         mutated_network[node_to_evolve][neighbor_to_evolve]['weight'] = mutate(mutated_network[node_to_evolve][neighbor_to_evolve]['weight'])
@@ -180,11 +179,12 @@ for mutated_network in mutated_networks:
 
 # Train the network
 for training_iteration in range(training_iterations):
-    print("Starting training iteration", training_iteration+1)
+    print("\nStarting training iteration", training_iteration+1)
     fitness_results = np.zeros([len(mutated_networks)])
 
     # Fire the networks
     for n in range(len(mutated_networks)):
+        print("Firing network", n)
         #print("Firing mutated network", n)
         for node in range(number_of_electrodes):
             mutated_networks[n].nodes[node]['charge'] = 0
@@ -215,7 +215,8 @@ for training_iteration in range(training_iterations):
         for n in range(len(mutated_networks)):
             mutated_networks[n] = deepcopy(fittest_network)
 
-    print("Best fitness: network number", best_fitness_result)
+    print("Best fitness:", best_fitness_result)
+    print("")
 
 
 
@@ -229,7 +230,7 @@ for training_iteration in range(training_iterations):
         if attribute_to_evolve == 2:
             mutated_network.nodes[node_to_evolve]["refraction_period"] = mutate(mutated_network.nodes[node_to_evolve]["refraction_period"])
         if attribute_to_evolve == 3:
-            mutated_network.nodes[node_to_evolve]["chance_of_self_poke"] = mutate(mutated_network.nodes[node_to_evolve]["chance_of_self_poke"])
+            mutated_network.nodes[node_to_evolve]["self_charge"] = mutate(mutated_network.nodes[node_to_evolve]["self_charge"])
         if attribute_to_evolve == 4:
             neighbor_to_evolve = randint(0, 59)
             mutated_network[node_to_evolve][neighbor_to_evolve]['weight'] = mutate(mutated_network[node_to_evolve][neighbor_to_evolve]['weight'])
