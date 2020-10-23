@@ -10,14 +10,17 @@ from copy import deepcopy
 number_of_electrodes = 60
 sampling_rate = 1000
 dt = 1/sampling_rate
-minutes_to_sample = 5/60
-seconds_to_sample = int(minutes_to_sample * 60)
+seconds_to_sample = 2
+minutes_to_sample = int(seconds_to_sample)
 number_of_steps = seconds_to_sample*sampling_rate  # Each recording lasts ca 45 min
 generations = number_of_steps
 training_iterations = 1000
 initial_threshold = 100
 initial_self_charge = 0.1
+max_mutations = 5
 
+seconds_to_sample = int(input("Enter seconds to sample: "))
+training_iterations = int(input("Enter number of training iterations: "))
 
 
 # These functions are as basic as it gets right now
@@ -37,9 +40,9 @@ def mutate(x, method="random"):
         x.add_edge(randint(0, x.number_of_nodes()-1), randint(0, x.number_of_nodes()-1), weight=1)
         return x
 
-def fitness(x, y, method="squared_difference"):
-    if method == "squared_difference":
-        if type(x) is list:
+def fitness(x, y, method="absolute_difference"):
+    if method == "absolute_difference":
+        if type(x) is list or type(x) is np.ndarray:
             difference = 0
             for n in range(len(x)):
                 difference += abs(x[n] - y[n])
@@ -178,6 +181,7 @@ for mutated_network in mutated_networks:
 
 
 # Train the network
+time_since_last_mutation = 0
 for training_iteration in range(training_iterations):
     print("\nStarting training iteration", training_iteration+1)
     fitness_results = np.zeros([len(mutated_networks)])
@@ -201,11 +205,13 @@ for training_iteration in range(training_iterations):
             times_fired_in_network[node] = network_model.nodes[node]['times_fired']
         fitness_results[n] = fitness(times_fired_in_network, times_fired_in_experiment)
 
+
     print("\nFitness results:\n", fitness_results)
     print("\n")
     print("Times fired in experiment:\n", times_fired_in_experiment)
-    print("\nTimes fired in network:\n", times_fired_in_network)
+    print("\nTimes fired in network 4:\n", times_fired_in_network)
     print("\n")
+
 
     # Stage the fittest network for mutation
     if min(fitness_results) < best_fitness_result:
@@ -214,7 +220,12 @@ for training_iteration in range(training_iterations):
         best_fitness_result = min(fitness_results)
         for n in range(len(mutated_networks)):
             mutated_networks[n] = deepcopy(fittest_network)
-
+        time_since_last_mutation = 0
+    else:
+        time_since_last_mutation +=1
+    if time_since_last_mutation > max_mutations:
+        for n in range(len(mutated_networks)):
+            mutated_networks[n] = deepcopy(fittest_network)
     print("Best fitness:", best_fitness_result)
     print("")
 
