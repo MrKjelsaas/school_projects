@@ -6,23 +6,28 @@ import random as rd
 from random import random
 import pycxsimulator
 from copy import deepcopy
+from networkx.readwrite import json_graph
 
-number_of_electrodes = 60
-sampling_rate = 1000
-dt = 1/sampling_rate
-seconds_to_sample = 1
+
+
+seconds_to_sample = 10
+max_mutations = 25
+training_iterations = 1000
 
 #seconds_to_sample = int(input("Enter seconds to sample: "))
 #training_iterations = int(input("Enter number of training iterations: "))
 
+number_of_electrodes = 60
+sampling_rate = 1000
+dt = 1/sampling_rate
+
 minutes_to_sample = int(seconds_to_sample)
 number_of_steps = seconds_to_sample*sampling_rate  # Each recording lasts ca 45 min
 generations = number_of_steps
-training_iterations = 1000
 initial_self_charge = 0.1
 initial_charge = 0
 initial_threshold = 100
-max_mutations = 25
+
 
 
 
@@ -132,7 +137,39 @@ def fire(network):
 
     return network
 
+def show_network(network):
+    max_weight = 0
+    for node in range(network.number_of_nodes()):
+        for neighbor in range(network.number_of_nodes()):
+            if node != neighbor:
+                if network[node][neighbor]['weight'] > max_weight:
+                    max_weight = network[node][neighbor]['weight']
+    e1 = [(u, v) for (u, v, d) in network.edges(data=True) if 0 <= d["weight"] < 0.1*max_weight]
+    e2 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.1*max_weight <= d["weight"] < 0.2*max_weight]
+    e3 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.2*max_weight <= d["weight"] < 0.3*max_weight]
+    e4 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.3*max_weight <= d["weight"] < 0.4*max_weight]
+    e5 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.4*max_weight <= d["weight"] < 0.5*max_weight]
+    e6 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.5*max_weight <= d["weight"] < 0.6*max_weight]
+    e7 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.6*max_weight <= d["weight"] < 0.7*max_weight]
+    e8 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.7*max_weight <= d["weight"] < 0.8*max_weight]
+    e9 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.8*max_weight <= d["weight"] < 0.9*max_weight]
+    e10 = [(u, v) for (u, v, d) in network.edges(data=True) if 0.9*max_weight <= d["weight"] < max_weight]
 
+    position = nx.spring_layout(network)
+    nx.draw_networkx_nodes(network, pos=position)
+
+    nx.draw_networkx_edges(network, pos=position, edgelist=e1, alpha = 0.1)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e2, alpha = 0.2)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e3, alpha = 0.3)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e4, alpha = 0.4)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e5, alpha = 0.5)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e6, alpha = 0.6)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e7, alpha = 0.7)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e8, alpha = 0.8)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e9, alpha = 0.9)
+    nx.draw_networkx_edges(network, pos=position, edgelist=e10, alpha = 1)
+
+    plt.show()
 
 
 
@@ -148,7 +185,7 @@ def fire(network):
 
 
 # Import the data
-data = np.loadtxt(r"Data/Dense - 2-1-20.spk.txt")
+data = np.loadtxt(r"Data/Sparse - 7-4-35.spk.txt")
 #print(np.shape(data))
 
 # Count the number of times each neuron fires
@@ -246,6 +283,10 @@ for training_iteration in range(training_iterations):
     print("\nBest fitness:", best_fitness_result)
     print("\n")
 
+    if best_fitness_result == 0:
+        print("\nFound optimal model!!\n")
+        break
+
     # Mutate the networks
     for n in range(len(mutated_networks)):
         for node in range(mutated_networks[n].number_of_nodes()):
@@ -259,13 +300,30 @@ for training_iteration in range(training_iterations):
         mutated_networks[n] = mutate(mutated_networks[n], method="all_attributes")
 
 
+# Shows the network info
+#print(json_graph.node_link_data(fittest_network))
+
+# Saves the network
+nx.write_gml(fittest_network, r"Models/fittest_network.gml")
+# Loads the network
+#test_network = nx.read_gml(r"Models/fittest_network.gml")
 
 
 
+for n in range(number_of_electrodes):
+    if times_fired_in_network[len(mutated_networks), n] == times_fired_in_experiment[n]:
+        plt.scatter(n, times_fired_in_experiment[n], c='g')
+    else:
+        plt.scatter(n, times_fired_in_network[len(mutated_networks), n], c='r')
+        plt.scatter(n, times_fired_in_experiment[n], c='b')
+plt.xlabel("Electrode number")
+plt.ylabel("Times fired")
+plt.legend(["Network", "Experiment", "Both"])
+plt.show()
 
 
 
-
+#show_network(fittest_network)
 
 
 
