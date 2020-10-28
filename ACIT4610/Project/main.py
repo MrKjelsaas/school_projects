@@ -32,11 +32,20 @@ initial_threshold = 100
 
 
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+def gradient(x, method="tanh", regulator = 10):
+    if method == "sigmoid":
+        return ((1 / (1 + np.exp(-x))) / regulator) + (1-(0.5/regulator))
+    if method == "tanh":
+        return (((np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))) / regulator ) + 1
 
 def crossover(x, y, method="average"):
-    if method == "average":
+    if type(x) is list or type(x) is np.ndarray:
+        if method="average":
+            z = np.zeros([len(x)])
+            for n in range(len(x)):
+                z[n] = (x[n]+y[n])/2
+            return z
+    if method="average":
         return (x+y)/2
 
 def mutate(x, method="random"):
@@ -215,14 +224,13 @@ fittest_network = initialize()
 
 # Check fitness of initial network
 print("Firing initial network")
-network_model = fire(fittest_network)
 for gen in range(generations):
-    network_model = fire(network_model)
+    fittest_network = fire(fittest_network)
 
 # Calculate fitness
 times_fired_in_network = np.zeros([number_of_electrodes])
 for node in range(number_of_electrodes):
-    times_fired_in_network[node] = network_model.nodes[node]['times_fired']
+    times_fired_in_network[node] = fittest_network.nodes[node]['times_fired']
 best_fitness_result = fitness(times_fired_in_network, times_fired_in_experiment)
 print("Initial network fitness", best_fitness_result)
 
@@ -230,6 +238,10 @@ print("Initial network fitness", best_fitness_result)
 mutated_networks = [None, None, None, None, None]
 for n in range(len(mutated_networks)):
     mutated_networks[n] = deepcopy(fittest_network)
+
+# Mutate the networks
+for n in range(len(mutated_networks)):
+    mutated_networks[n] = mutate(mutated_networks[n], method="all_attributes")
 
 # Train the network
 time_since_last_mutation = 0
@@ -290,14 +302,17 @@ for training_iteration in range(training_iterations):
     # Mutate the networks
     for n in range(len(mutated_networks)):
         for node in range(mutated_networks[n].number_of_nodes()):
-            mutated_networks[n].nodes[node]["threshold"] *= (sigmoid(times_fired_in_network[n, node] - times_fired_in_experiment[node]) + 0.5)
-            mutated_networks[n].nodes[node]["refraction_period"] *= (sigmoid(times_fired_in_experiment[node] - times_fired_in_network[n, node]) + 0.5)
-            mutated_networks[n].nodes[node]["self_charge"] *= (sigmoid(times_fired_in_experiment[node] - times_fired_in_network[n, node]) + 0.5)
+            mutated_networks[n].nodes[node]["threshold"] *= (gradient(times_fired_in_network[n, node] - times_fired_in_experiment[node]))
+            mutated_networks[n].nodes[node]["refraction_period"] *= (gradient(times_fired_in_experiment[node] - times_fired_in_network[n, node]))
+            mutated_networks[n].nodes[node]["self_charge"] *= (gradient(times_fired_in_experiment[node] - times_fired_in_network[n, node]))
             for neighbor in range(mutated_networks[n].number_of_nodes()):
                 if node != neighbor:
-                    mutated_networks[n][neighbor][node]['weight'] *= (sigmoid(times_fired_in_experiment[node] - times_fired_in_network[n, node]) + 0.5)
+                    mutated_networks[n][neighbor][node]['weight'] *= (gradient(times_fired_in_experiment[node] - times_fired_in_network[n, node]))
 
         mutated_networks[n] = mutate(mutated_networks[n], method="all_attributes")
+
+
+
 
 
 # Shows the network info
@@ -349,12 +364,7 @@ Finally:
 - Present or visualize the network in some form
 """
 
-"""
-To do:
-- Make the gradient function
-    - How to calculate gradient for all attribues (and weights)?
-        - x *= sigmoid(y - x) + 0.5
-"""
+
 
 
 
