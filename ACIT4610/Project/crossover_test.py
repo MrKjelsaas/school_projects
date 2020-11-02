@@ -10,8 +10,7 @@ from networkx.readwrite import json_graph
 
 
 
-seconds_to_sample = 2
-max_mutations = 25
+seconds_to_sample = 5
 generations = 200
 
 #seconds_to_sample = int(input("Enter seconds to sample: "))
@@ -387,7 +386,7 @@ plt.savefig(r'Models/fitness_network_crossover.png')
 
 
 
-
+print("This was crossover with fitness for total network")
 
 
 

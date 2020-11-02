@@ -10,15 +10,17 @@ from networkx.readwrite import json_graph
 
 
 
-seconds_to_sample = 5
-max_mutations = 10
-generations = 200
+seconds_to_sample = 10 # Recommended: 3
+generations = 250 # Recommended: 125
+max_mutations = 15
+
+
 
 #seconds_to_sample = int(input("Enter seconds to sample: "))
 #generations = int(input("Enter number of training iterations: "))
 
 number_of_electrodes = 60
-sampling_rate = 1000
+sampling_rate = 500 # Recommended: 500
 dt = 1/sampling_rate
 
 minutes_to_sample = int(seconds_to_sample/60)
@@ -77,9 +79,10 @@ def crossover(x, y, method="average", alpha=0.5, alpha2=0.75):
                 return z
         return (x+y)/2
 
-def mutate(x, method="random", all_weights_independently=False):
+def mutate(x, method="random", all_weights_independently=True):
     if method == "random":
-        return x * (random() + 0.5)
+        #return x * (random() + 0.5)
+        #return x * (random()/2 + 0.75)
         return x * (random()/5 + 0.9)
 
     if method == "add_node":
@@ -237,7 +240,7 @@ def show_network(network):
 
 
 # Import the data
-data = np.loadtxt(r"Data/Dense - 2-2-35.spk.txt")
+data = np.loadtxt(r"Data/Dense - 2-1-35.spk.txt")
 #print(np.shape(data))
 
 # Count the number of times each neuron fires
@@ -254,8 +257,8 @@ for n in range(len(data)):
 
 # Make the spike train matrix
 spike_trains = np.zeros([number_of_electrodes, number_of_steps])
-for i in range(number_of_steps):
-    spike_trains[int(data[i, 1]), i] += 1
+for n in range(number_of_steps):
+    spike_trains[int(data[n, 1]), n] += 1
 #print(spike_trains[:5, :10])
 
 
@@ -266,7 +269,7 @@ for i in range(number_of_steps):
 fittest_network = initialize()
 
 # Check fitness of initial network
-print("Firing initial network")
+print("\n\nFiring initial network")
 for step in range(number_of_steps):
     fittest_network = fire(fittest_network)
 
@@ -286,10 +289,14 @@ for n in range(len(mutated_networks)):
 for n in range(len(mutated_networks)):
     mutated_networks[n] = mutate(mutated_networks[n], method="all_attributes")
 
+
+
 # Train the network
 all_fitnesses = np.zeros([generations])
+time_since_last_improvement = 0
 for generation in range(generations):
-    print("\nStarting training iteration", generation+1)
+    print("\n------------------------------------------------------------------------\n")
+    print("\nStarting generation", generation+1, "of", generations)
     fitness_results = np.zeros([len(mutated_networks)])
     node_fitness_results = np.zeros([len(mutated_networks), number_of_electrodes])
     times_fired_in_network = np.zeros([len(mutated_networks)+1, number_of_electrodes])
@@ -326,7 +333,7 @@ for generation in range(generations):
         child.nodes[node]["self_charge"] = crossover(father.nodes[node]["self_charge"], mother.nodes[node]["self_charge"])
         for neighbor in range(number_of_electrodes):
             if node != neighbor:
-                child[node][neighbor]["weight"]  = crossover(father[node][neighbor]["weight"], mother[node][neighbor]["weight"])
+                child[neighbor][node]["weight"] = crossover(father[neighbor][node]["weight"], mother[neighbor][node]["weight"])
 
     # Copy the child onto the least fit network
     worst_parent = np.sort(fitness_results)[-1]
@@ -343,6 +350,16 @@ for generation in range(generations):
         print("\nFound better model")
         best_fitness_result = min(fitness_results)
         fittest_network = deepcopy(mutated_networks[father_index])
+        time_since_last_improvement = 0
+    else:
+        time_since_last_improvement += 1
+
+    # Reset if max mutations is reached
+    if time_since_last_improvement >= max_mutations:
+        print("Resetting networks because of no improvement")
+        for n in range(len(mutated_networks)):
+            mutated_networks[n] = deepcopy(fittest_network)
+        time_since_last_improvement = 0
 
     # Display times fired in fittest network
     for node in range(number_of_electrodes):
@@ -362,7 +379,8 @@ for generation in range(generations):
         break
 
     # Mutate the networks
-    mutated_networks[n] = mutate(mutated_networks[n], method="all_attributes")
+    for n in range(len(mutated_networks)):
+        mutated_networks[n] = mutate(mutated_networks[n], method="all_attributes")
 
 
 
@@ -372,11 +390,32 @@ for generation in range(generations):
 #print(json_graph.node_link_data(fittest_network))
 
 # Saves the network
-nx.write_gml(fittest_network, r"Models/fittest_network_crossover_nodefitness.gml")
+nx.write_gml(fittest_network, r"Results/fittest_network.gml")
 # Loads the network
-#test_network = nx.read_gml(r"Models/fittest_network.gml")
+#fittest_network = nx.read_gml(r"Models/fittest_network_crossover_nodefitness.gml")
 
 
+
+print("Firing evaluation network")
+for node in range(number_of_electrodes):
+    nx.set_node_attributes(fittest_network, initial_charge, 'charge')
+    nx.set_node_attributes(fittest_network, 0, 'times_fired')
+    nx.set_node_attributes(fittest_network, 0, 'firing')
+
+plt.figure(figsize=(60, 30))
+for step in range(number_of_steps):
+    fittest_network = fire(fittest_network)
+    for node in range(number_of_electrodes):
+        if fittest_network.nodes[node]['firing'] == 1 and spike_trains[node, step] > 0:
+            plt.scatter(step, node, c='g')
+        elif fittest_network.nodes[node]['firing'] == 1:
+            plt.scatter(step, node, c='r')
+        elif spike_trains[node, step] > 0:
+            plt.scatter(step, node, c='b')
+
+plt.savefig(r'Results/raster_plot.png')
+
+plt.clf()
 
 for n in range(number_of_electrodes):
     if times_fired_in_network[len(mutated_networks), n] == times_fired_in_experiment[n]:
@@ -387,55 +426,24 @@ for n in range(number_of_electrodes):
 plt.xlabel("Electrode number")
 plt.ylabel("Times fired")
 plt.legend(["Network", "Experiment", "Both"])
-plt.savefig(r'Models/fittest_network_crossover_nodefitness.png')
+plt.savefig(r'Results/times_fired_dot.png')
+
+plt.clf()
+
+plt.plot(range(number_of_electrodes), times_fired_in_network[len(mutated_networks)])
+plt.plot(range(number_of_electrodes), times_fired_in_experiment)
+plt.xlabel("Electrode number")
+plt.ylabel("Times fired")
+plt.legend(["Network", "Experiment", "Both"])
+plt.savefig(r'Results/times_fired_plot.png')
+
+plt.clf()
 
 plt.plot(range(generations), all_fitnesses)
 plt.xlabel("Generation")
 plt.ylabel("Fitness/cost")
-plt.savefig(r'Models/fitness_network_crossover_nodefitness.png')
-
+plt.savefig(r'Results/fitness_per_generation.png')
 
 #show_network(fittest_network)
 
-
-
-
-
-
-
-
-
-
-"""
-Initially:
-- Make a network
-- Calculate the gradients of the network and update attributes
-
-Repeat:
-- Copy the updated network to the 5 mutated_networks slots
-- Mutate the 5 networks randomly
-- Fire the 5 networks and calculate fitness_results
-- Select the best network and copy it to "fittest network"
-
-Finally:
-- Present or visualize the network in some form
-"""
-
-
-
-
-
-
-
-"""
-nx.draw(network)
-plt.show()
-
-#print("List Nodes: ", list(network.nodes.data()))
-#print("List Edges: ", list(network.edges.data()))
-#print("List adjesent edges: ", list(network.adj[1]))
-#print("Nubmer of nodes: ", network.number_of_nodes())
-#print("Number of edges: ", network.number_of_edges())
-#print("List adjesent edges: ", list(network.adj[1]))
-
-"""
+print("This was crossover with nodefitness")

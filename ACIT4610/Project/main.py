@@ -10,7 +10,7 @@ from networkx.readwrite import json_graph
 
 
 
-seconds_to_sample = 2
+seconds_to_sample = 5
 max_mutations = 25
 generations = 200
 
@@ -378,7 +378,7 @@ plt.savefig(r'Models/fitness_network.png')
 
 
 
-
+print("This was main")
 
 
 
