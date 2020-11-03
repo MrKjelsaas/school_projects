@@ -7,11 +7,12 @@ from random import random
 import pycxsimulator
 from copy import deepcopy
 from networkx.readwrite import json_graph
+import os
 
 
 
-seconds_to_sample = 10 # Recommended: 3
-generations = 250 # Recommended: 125
+seconds_to_sample = 10 # Recommended: >2
+generations = 150 # Recommended: >125
 max_mutations = 15
 
 
@@ -77,7 +78,7 @@ def crossover(x, y, method="average", alpha=0.5, alpha2=0.75):
                 for n in range(len(x)):
                     z[n] = x[n]*alpha + y[n]*(1-alpha)
                 return z
-        return (x+y)/2
+        return x*alpha + y*(1-alpha)
 
 def mutate(x, method="random", all_weights_independently=True):
     if method == "random":
@@ -389,6 +390,12 @@ for generation in range(generations):
 # Shows the network info
 #print(json_graph.node_link_data(fittest_network))
 
+# Creates results folder in case it doesn't exist
+try:
+    os.mkdir("Results")
+except:
+    pass
+
 # Saves the network
 nx.write_gml(fittest_network, r"Results/fittest_network.gml")
 # Loads the network
@@ -396,27 +403,37 @@ nx.write_gml(fittest_network, r"Results/fittest_network.gml")
 
 
 
+# Fires the fittest network to make raster plot
 print("Firing evaluation network")
 for node in range(number_of_electrodes):
     nx.set_node_attributes(fittest_network, initial_charge, 'charge')
     nx.set_node_attributes(fittest_network, 0, 'times_fired')
     nx.set_node_attributes(fittest_network, 0, 'firing')
 
-plt.figure(figsize=(60, 30))
+plt.figure(figsize=(30, 15))
 for step in range(number_of_steps):
     fittest_network = fire(fittest_network)
     for node in range(number_of_electrodes):
-        if fittest_network.nodes[node]['firing'] == 1 and spike_trains[node, step] > 0:
-            plt.scatter(step, node, c='g')
-        elif fittest_network.nodes[node]['firing'] == 1:
-            plt.scatter(step, node, c='r')
-        elif spike_trains[node, step] > 0:
+        if spike_trains[node, step] > 0:
             plt.scatter(step, node, c='b')
 
-plt.savefig(r'Results/raster_plot.png')
-
+plt.title("Raster plot experiment")
+plt.savefig(r'Results/raster_plot_experiment.png')
 plt.clf()
 
+for step in range(number_of_steps):
+    fittest_network = fire(fittest_network)
+    for node in range(number_of_electrodes):
+        if fittest_network.nodes[node]['firing'] == 1:
+            plt.scatter(step, node, c='r')
+
+plt.title("Raster plot network")
+plt.savefig(r'Results/raster_plot_network.png')
+plt.clf()
+
+
+
+# Scatter plot for times fired
 for n in range(number_of_electrodes):
     if times_fired_in_network[len(mutated_networks), n] == times_fired_in_experiment[n]:
         plt.scatter(n, times_fired_in_experiment[n], c='g')
@@ -425,11 +442,12 @@ for n in range(number_of_electrodes):
         plt.scatter(n, times_fired_in_experiment[n], c='b')
 plt.xlabel("Electrode number")
 plt.ylabel("Times fired")
-plt.legend(["Network", "Experiment", "Both"])
+plt.legend(["Network", "Experiment", "Both"]) # The colors here may be mixed up
 plt.savefig(r'Results/times_fired_dot.png')
 
 plt.clf()
 
+# Line plot for times fired
 plt.plot(range(number_of_electrodes), times_fired_in_network[len(mutated_networks)])
 plt.plot(range(number_of_electrodes), times_fired_in_experiment)
 plt.xlabel("Electrode number")
@@ -439,11 +457,15 @@ plt.savefig(r'Results/times_fired_plot.png')
 
 plt.clf()
 
+# Shows the fitness score (for fittest network) per generation
 plt.plot(range(generations), all_fitnesses)
 plt.xlabel("Generation")
 plt.ylabel("Fitness/cost")
 plt.savefig(r'Results/fitness_per_generation.png')
 
-#show_network(fittest_network)
+# Displays the network with weights
+show_network(fittest_network)
 
+# Legacy line from running multiple programs that does different things
+# where I forgot which windows was which
 print("This was crossover with nodefitness")
