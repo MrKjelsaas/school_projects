@@ -15,7 +15,7 @@ seconds_to_sample = 10 # Recommended: >2
 generations = 150 # Recommended: >125
 max_mutations = 15
 
-
+live_visualisation = True
 
 #seconds_to_sample = int(input("Enter seconds to sample: "))
 #generations = int(input("Enter number of training iterations: "))
@@ -291,6 +291,10 @@ for n in range(len(mutated_networks)):
     mutated_networks[n] = mutate(mutated_networks[n], method="all_attributes")
 
 
+if live_visualisation == True:
+    plt.ion()
+    fig, axs = plt.subplots(2)
+
 
 # Train the network
 all_fitnesses = np.zeros([generations])
@@ -384,7 +388,23 @@ for generation in range(generations):
         mutated_networks[n] = mutate(mutated_networks[n], method="all_attributes")
 
 
+    # Live visualisation
+    if live_visualisation == True:
+        axs[0].plot(range(generation+1), all_fitnesses[:generation+1])
+        axs[1].clear()
 
+        for n in range(number_of_electrodes):
+            axs[1].plot(range(number_of_electrodes), times_fired_in_network[len(mutated_networks)])
+            axs[1].plot(range(number_of_electrodes), times_fired_in_experiment)
+
+        plt.draw()
+        plt.show()
+        plt.pause(0.00001)
+
+
+
+if live_visualisation == True:
+    plt.ioff()
 
 
 # Shows the network info
