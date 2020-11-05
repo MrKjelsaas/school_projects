@@ -405,6 +405,7 @@ for generation in range(generations):
 
 if live_visualisation == True:
     plt.ioff()
+    plt.clf()
 
 
 # Shows the network info
