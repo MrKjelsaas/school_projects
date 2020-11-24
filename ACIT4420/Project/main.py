@@ -23,6 +23,8 @@ from bs4 import BeautifulSoup
 import re
 import string
 
+
+
 def find_all_URLs(URL):
     try:
         found_URLs = []
@@ -35,7 +37,7 @@ def find_all_URLs(URL):
         for URL in URL_soup.find_all('a'):
             link = URL.get('href')
             try:
-                if link[:4] != "http":
+                if link[:5] != "https":
                     continue
                 if link in found_URLs:
                     continue
@@ -57,6 +59,68 @@ def find_all_URLs(URL):
     except:
         return []
 
+def find_all_phone_numbers(input):
+    numbers_found = []
+
+    # Looking for Norwegian phone numbers on the standard form
+    results = re.findall("\d{8}", input)
+    for result in results:
+        result = result.replace(" ", "")
+        if result not in numbers_found:
+            numbers_found.append(result)
+
+    results = re.findall("\+\d{10}", input)
+    for result in results:
+        result = result.replace(" ", "")
+        if result not in numbers_found:
+            numbers_found.append(result)
+
+    results = re.findall("^\+\d\d \d\d \d\d \d\d", input)
+    for result in results:
+        result = result.replace(" ", "")
+        if result not in numbers_found:
+            numbers_found.append(result)
+
+    results = re.findall("\+ *\d\d \d\d \d\d \d\d \d\d", input)
+    for result in results:
+        result = result.replace(" ", "")
+        if result not in numbers_found:
+            numbers_found.append(result)
+
+    results = re.findall("^\+\d\d\d \d\d \d\d\d", input)
+    for result in results:
+        result = result.replace(" ", "")
+        if result not in numbers_found:
+            numbers_found.append(result)
+
+    results = re.findall("\+ *\d\d\d \d\d \d\d\d", input)
+    for result in results:
+        result = result.replace(" ", "")
+        if result not in numbers_found:
+            numbers_found.append(result)
+
+    """
+    # This finds North American numbers as well, but also a lot of crap
+    results = re.findall(r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]', input)
+    for result in results:
+        if result not in numbers_found:
+            numbers_found.append(result)
+    """
+
+    return numbers_found
+
+def find_all_emails(input):
+    emails_found = []
+
+    results = re.findall("\w+@\w+\.[a-zA-Z]{2,4}", input)
+    for result in results:
+        if result not in emails_found:
+            emails_found.append(result)
+
+    return emails_found
+
+
+
 # Set to True to output which URL is being searched
 print_url_checking = False
 print_scraping = False
@@ -67,8 +131,11 @@ print_scraping = False
 
 
 
+
+
+
 # Create a python project that is able to download websites and capture sensitive data on the site
-print("\n-----\n\nWelcome to my web crawler")
+print("\n----------\n\nWelcome to my web crawler")
 
 # The program has to accept the following parameters:
 # - The start URL of the web crawling
@@ -82,9 +149,9 @@ while valid_url is False:
     # Control the URL
     # Check that it starts with http://www.
     if start_url[0:4] == "www.":
-        start_url = "http://" + start_url
-    if not((start_url[0:11] == "http://www.") or (start_url[0:12] == "https://www.")):
-        start_url = "http://www." + start_url
+        start_url = "https://" + start_url
+    if not(start_url[0:12] == "https://www."):
+        start_url = "https://www." + start_url
 
     try:
         start_URL_result = requests.get(start_url, timeout=5)
@@ -92,7 +159,7 @@ while valid_url is False:
     except:
         print("Invalid URL, please try again")
 
-del valid_url
+del valid_url # Just to show that I know about memory management
 
 # - The depth of the crawling which means how many jumps has to be considered when downloading the website
 valid_crawl_debth = False
@@ -124,14 +191,20 @@ del inputting_defined_regexes_is_done
 
 
 
-print("\nAnd thus commences the crawl\n")
+
+
+
+
+
+
+
 
 # Make a list of URLs to visit
 URLs_to_crawl = [] # The URLs that we are going to scrape for info (email, phone number, etc.)
 next_debth_URLs = [start_url] # The next URLs we are going to look for URLs in
 debth_crawled = 0
 
-print("Starting to look for URLs...\n")
+print("\n\nStarting to look for URLs...\n")
 while debth_crawled < crawl_debth + 1:
     found_URLs = [] # The list of URLs that are found during the current debth of the search
 
@@ -153,45 +226,67 @@ while debth_crawled < crawl_debth + 1:
 
     debth_crawled += 1
 
-print("\n\nDone looking for URLs\n")
+print("\nDone looking for URLs\n")
 
 total_URLs_found = len(URLs_to_crawl)
 for n in range(len(next_debth_URLs)):
     if next_debth_URLs[n] not in URLs_to_crawl:
         total_URLs_found += 1
 print("Number of URLs found:", total_URLs_found)
-print("\n\n")
+print("\n")
+
+
+
+
 
 
 
 
 
 print("Starting to scrape the found URLs\n")
-valid_symbols = string.ascii_lowercase + "æøå" + "'" + "-"  # We assume that all words only contain latin letters and dashes and apostrophes
+valid_symbols = string.ascii_lowercase + "æøå-'" # We assume that valid words only contain latin letters and dashes and apostrophes
 list_of_words_found = []
+list_of_phone_numbers_found = []
+list_of_emails_found = []
 
 for url in URLs_to_crawl:
     try:
         result = requests.get(url, timeout=5)
     except:
-        pass
+        continue
     URL_soup = BeautifulSoup(result.content, 'html.parser')
 
     if print_scraping == True:
         print("Now scraping:", url)
 
-    URL_text = URL_soup.get_text().split()
+    # Extracts the text from a website
+    URL_text = " ".join(URL_soup.strings)
+
+
+
+    # Looks for phone numbers
+    for number in find_all_phone_numbers(URL_text):
+        if number not in list_of_phone_numbers_found:
+            list_of_phone_numbers_found.append(number)
+
+    # Looks for emails
+    for email in find_all_emails(URL_text):
+        if email not in list_of_emails_found:
+            list_of_emails_found.append(email)
+
+    # Looks for valid words
+    URL_text = URL_text.split()
 
     for word in URL_text:
         nameholder = ""
         for character in word:
             if character.lower() in valid_symbols:
                 nameholder += character.lower()
-            else:
+            else: # If word contains invalid character, skip it
                 nameholder = ""
                 break
-        if len(nameholder) > 0:
-            if len(list_of_words_found) > 0:
+        if len(nameholder) > 0: # If it found a word
+            if len(list_of_words_found) > 0: # Check if it is already found
                 for n in range(len(list_of_words_found)):
                     if nameholder == list_of_words_found[n][0]:
                         list_of_words_found[n][1] += 1
@@ -201,7 +296,13 @@ for url in URLs_to_crawl:
             elif len(list_of_words_found) == 0:
                 list_of_words_found.append([nameholder, 1])
 
-print("\nFinished finding words in URLs\n")
+
+
+
+
+
+
+print("\nFinished scraping the URLs\n")
 
 print("\nNumber of words found:", len(list_of_words_found))
 
@@ -229,6 +330,27 @@ for i in range(len(user_defined_regexes)):
 for user_regex, occurence in occurence_of_user_regexes:
     print(user_regex, "occured", occurence, "times")
 
+
+# Shows all emails found
+if len(list_of_emails_found) == 0:
+    print("\nDidn't find any emails")
+else:
+    print("\nNumber of emails found:", len(list_of_emails_found))
+
+    print("Emails found:")
+    for email in list_of_emails_found:
+        print(email)
+
+
+# Shows all phone numbers found
+if len(list_of_phone_numbers_found) == 0:
+    print("\nDidn't find any phone numbers")
+else:
+    print("\nNumber of phone numbers found:", len(list_of_phone_numbers_found))
+
+    print("Phone numbers found:")
+    for number in list_of_phone_numbers_found:
+        print(number)
 
 
 
