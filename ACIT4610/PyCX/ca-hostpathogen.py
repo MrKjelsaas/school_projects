@@ -4,7 +4,7 @@ from pylab import *
 width = 50
 height = 50
 initProb = 0.01
-infectionRate = 0.85
+infectionRate = 0.01
 regrowthRate = 0.15
 
 def initialize():
