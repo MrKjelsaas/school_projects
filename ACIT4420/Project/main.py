@@ -19,7 +19,7 @@ The program should provide the following features:
 """
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 import re
 import string
 
@@ -28,6 +28,12 @@ print_url_checking = False
 print_scraping = False
 print_found_emails = False
 print_found_phone_numbers = False
+print_found_words = False
+print_most_frequently_used_words = False
+print_comments_found = False
+print_user_defined_regexes = True
+print_words_with_more_than_one_occurence = False
+print_number_of_words_found = False
 
 
 def find_all_URLs(URL):
@@ -123,7 +129,7 @@ def find_all_phone_numbers(input):
 def find_all_emails(input):
     emails_found = []
 
-    results = re.findall("\w+@\w+\.[a-zA-Z]{2,4}", input)
+    results = re.findall("[\w\.\-\_]+@\w+\.[a-zA-Z]{2,4}", input)
     for result in results:
         if result not in emails_found:
             emails_found.append(result)
@@ -305,32 +311,32 @@ print("Starting to scrape", len(URLs_to_crawl), "URLs\n")
 list_of_words_found = []
 list_of_phone_numbers_found = []
 list_of_emails_found = []
+list_of_comments_found = []
 
 for url in URLs_to_crawl:
     try:
         result = requests.get(url, timeout=5)
     except:
         continue
+
+    # Extracts the text from a website
     URL_soup = BeautifulSoup(result.content, 'html.parser')
 
     if print_scraping == True:
         print("Now scraping:", url)
 
-    # Extracts the text from a website
-    URL_text = " ".join(URL_soup.strings)
-
     # Looks for phone numbers
-    for number in find_all_phone_numbers(URL_text):
+    for number in find_all_phone_numbers(URL_soup.prettify()):
         if number not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(number)
 
     # Looks for emails
-    for email in find_all_emails(URL_text):
+    for email in find_all_emails(URL_soup.prettify()):
         if email not in list_of_emails_found:
             list_of_emails_found.append(email)
 
     # Looks for valid words
-    for word, amount in find_all_words(URL_text):
+    for word, amount in find_all_words(URL_soup.prettify()):
         word_found = False
         if len(list_of_words_found) == 0:
             list_of_words_found.append([word, amount])
@@ -343,8 +349,14 @@ for url in URLs_to_crawl:
             if word_found == False:
                 list_of_words_found.append([word, amount])
 
-
-
+    # Look for comments in the source code
+    result = URL_soup.prettify().split("\n")
+    for n in range(len(result)):
+        temp = re.findall("<!-- .* -->", result[n])
+        if temp is not None:
+        #if "<!--" in result[n]:
+            for index in temp:
+                list_of_comments_found.append([index[5:-4], n, url])
 
 
 
@@ -352,19 +364,24 @@ for url in URLs_to_crawl:
 
 print("\nFinished scraping the URLs\n")
 
-print("\nNumber of words found:", len(list_of_words_found))
+if print_number_of_words_found == True:
+    print("\nNumber of words found:", len(list_of_words_found))
 
 words_with_more_than_one_occurence = 0
 for word, amount in list_of_words_found:
     if amount > 1:
         words_with_more_than_one_occurence += 1
-print("Words with more than one occurence:", words_with_more_than_one_occurence)
+
+if print_words_with_more_than_one_occurence == True:
+    print("Words with more than one occurence:", words_with_more_than_one_occurence)
 
 print("\nNumber of URLs scraped:", len(URLs_to_crawl), "\n")
 
 
 
-print("\nLooking for user defined regexes\n")
+
+
+# Shows occurence of user defined regexes
 occurence_of_user_regexes = []
 for regex in user_defined_regexes:
     occurence_of_user_regexes.append([regex, 0])
@@ -374,12 +391,16 @@ for i in range(len(user_defined_regexes)):
         if list_of_words_found[j][0] == user_defined_regexes[i]:
             occurence_of_user_regexes[i][1] = list_of_words_found[j][1]
             break
+if print_user_defined_regexes == True:
+    for user_regex, occurence in occurence_of_user_regexes:
+        print(user_regex, "occured", occurence, "times")
 
-for user_regex, occurence in occurence_of_user_regexes:
-    print(user_regex, "occured", occurence, "times")
 
 
-
+# Shows all words found
+if print_found_words == True:
+    for n in range(len(list_of_words_found)):
+        print(list_of_words_found[n][0])
 
 
 # Shows all emails found
@@ -393,6 +414,7 @@ else:
             print(email)
 
 
+
 # Shows all phone numbers found
 if len(list_of_phone_numbers_found) == 0:
     print("\nDidn't find any phone numbers")
@@ -403,6 +425,27 @@ else:
         for number in list_of_phone_numbers_found:
             print(number)
 
+
+
+# Shows the most frequently used words
+list_of_words_found = sorted(list_of_words_found, key=lambda l:l[1], reverse=True)
+if print_most_frequently_used_words == True:
+    print("\n")
+    if len(list_of_words_found) < 10:
+        for n in range(len(list_of_words_found)):
+            print("\"", list_of_words_found[n][0], "\"", " occured ", list_of_words_found[n][1], " times", sep="")
+    else:
+        for n in range(10):
+            print("\"", list_of_words_found[n][0], "\"", " occured ", list_of_words_found[n][1], " times", sep="")
+    print("\n")
+
+
+
+# Shows all comments found
+print("\nFound", len(list_of_comments_found), "comments")
+if print_comments_found == True:
+    for n in range(len(list_of_comments_found)):
+        print("Comment: ", "\"", list_of_comments_found[n][0], "\"\n", "occured on line ", list_of_comments_found[n][1], " at url\n", list_of_comments_found[n][2], sep="", end="\n\n")
 
 
 
