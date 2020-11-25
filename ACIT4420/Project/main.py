@@ -32,8 +32,8 @@ print_found_words = False
 print_most_frequently_used_words = False
 print_comments_found = False
 print_user_defined_regexes = True
-print_words_with_more_than_one_occurence = False
-print_number_of_words_found = False
+print_number_of_words_found = True
+print_words_with_more_than_one_occurence = True
 
 
 def find_all_URLs(URL):
@@ -143,7 +143,7 @@ def find_all_words(input, return_amount = True):
 
     for word in input:
         # Single symbols are not words
-        if word == "-" or word == "'" or word == "--":
+        if word == "-" or word == "'" or word == "--" or word == "''":
             continue
 
         if word[0] == "-":
@@ -336,7 +336,7 @@ for url in URLs_to_crawl:
             list_of_emails_found.append(email)
 
     # Looks for valid words
-    for word, amount in find_all_words(URL_soup.prettify()):
+    for word, amount in find_all_words(" ".join(URL_soup.stripped_strings)):
         word_found = False
         if len(list_of_words_found) == 0:
             list_of_words_found.append([word, amount])
