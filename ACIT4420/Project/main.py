@@ -29,7 +29,7 @@ print_scraping = False
 print_found_emails = False
 print_found_phone_numbers = False
 print_found_words = False
-print_most_frequently_used_words = False
+print_most_frequently_used_words = True
 print_comments_found = False
 print_user_defined_regexes = True
 print_number_of_words_found = True
@@ -136,54 +136,24 @@ def find_all_emails(input):
 
     return emails_found
 
-def find_all_words(input, return_amount = True):
+def find_all_words(input):
     words_found = []
-    valid_symbols = string.ascii_lowercase + "æøå" + "-" + "'" # We assume that valid words only contain latin letters and dashes and apostrophes
-    input = input.split()
+    for result in re.findall("[a-zA-ZæøåÆØÅ'\-]+", input):
+        result = result.lower()
 
-    for word in input:
-        # Single symbols are not words
-        if word == "-" or word == "'" or word == "--" or word == "''":
+        if result == "-" or result == "--":
             continue
+        if result[0] == "-":
+            result = result[1:]
+        if result[-1] == "-":
+            result = result[:-1]
 
-        if word[0] == "-":
-            word = word[1:]
-        if word[-1] == "-":
-            word = word[:-1]
-
-        # Including words in apostrophes
-        if word[0] == "'":
-            word = word[1:]
-        if word[-1] == "'":
-            if word.lower()[-2] != "s":
-                word = word[:-1]
-
-        nameholder = ""
-        for character in word:
-            if character.lower() in valid_symbols:
-                nameholder += character.lower()
-            else: # If word contains invalid character, skip it
-                nameholder = ""
-                break
-
-        if len(nameholder) > 0: # If it found a word
-            if len(words_found) > 0: # Check if it is already found
-                for n in range(len(words_found)):
-                    if nameholder == words_found[n][0]:
-                        words_found[n][1] += 1
-                        break
-                    elif n == len(words_found)-1:
-                        words_found.append([nameholder, 1])
-            elif len(words_found) == 0:
-                words_found.append([nameholder, 1])
-
-    if return_amount == False:
-        temp = []
-        for n in range(len(words_found)):
-            temp.append(words_found[n][0])
-        return temp
-
+        if result not in words_found:
+            words_found.append([result, 1])
+        else:
+            words_found.index(result)[1] += 1
     return words_found
+
 
 
 
@@ -326,12 +296,12 @@ for url in URLs_to_crawl:
         print("Now scraping:", url)
 
     # Looks for phone numbers
-    for number in find_all_phone_numbers(URL_soup.prettify()):
+    for number in find_all_phone_numbers(URL_soup.get_text()):
         if number not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(number)
 
     # Looks for emails
-    for email in find_all_emails(URL_soup.prettify()):
+    for email in find_all_emails(URL_soup.get_text()):
         if email not in list_of_emails_found:
             list_of_emails_found.append(email)
 
@@ -363,6 +333,17 @@ for url in URLs_to_crawl:
 
 
 print("\nFinished scraping the URLs\n")
+print("\n-----\n\n")
+
+
+
+
+
+
+
+
+
+
 
 if print_number_of_words_found == True:
     print("\nNumber of words found:", len(list_of_words_found))
@@ -460,7 +441,7 @@ if print_comments_found == True:
 
 
 
-print("\n\n\n--------------------\n\n\n")
+print("\n\n\n--------------------\nProgram finished\n\n\n")
 
 
 
@@ -476,8 +457,11 @@ print("\n\n\n--------------------\n\n\n")
 """
 To do:
 - Validere ekte telefonnumre
-- Jeg får forholde meg til kun norske numre enn så lenge
-- Numre som begynner på 00 i stedet for +
+    - Jeg får forholde meg til kun norske numre enn så lenge
+    - Numre som begynner på 00 i stedet for +
+
+- Inkludere flere bokstaver når man leter etter ord?
+    - ü é osv.
 
 
 
