@@ -19,9 +19,10 @@ The program should provide the following features:
 """
 
 import requests
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup
 import re
-import string
+
+
 
 # Set to True to output info
 print_url_checking = False
@@ -29,46 +30,41 @@ print_scraping = False
 print_found_emails = False
 print_found_phone_numbers = False
 print_found_words = False
-print_most_frequently_used_words = True
+print_most_frequently_used_words = False
 print_comments_found = False
 print_user_defined_regexes = True
-print_number_of_words_found = True
-print_words_with_more_than_one_occurence = True
+print_number_of_words_found = False
+print_words_with_more_than_one_occurence = False
+
 
 
 def find_all_URLs(URL):
+    found_URLs = []
     try:
-        found_URLs = []
-        try:
-            result = requests.get(URL, timeout=5)
-        except:
-            return []
-        URL_soup = BeautifulSoup(result.content, 'html.parser')
-
-        for URL in URL_soup.find_all('a'):
-            link = URL.get('href')
-            try:
-                if link[:5] != "https":
-                    continue
-                if link in found_URLs:
-                    continue
-                if link[-4:] == ".pdf":
-                    continue
-                if link[-4:] == ".jpg":
-                    continue
-                if link[-4:] == ".zip":
-                    continue
-                if link[-5:] == ".docx":
-                    continue
-
-                found_URLs.append(URL.get('href'))
-            except:
-                pass
-
-        return found_URLs
-
+        result = requests.get(URL, timeout=5)
     except:
         return []
+    URL_soup = BeautifulSoup(result.content, 'html.parser')
+
+    for link in re.findall("href\=\"https[:\/.a-zA-Z0-9]+\"", URL_soup.prettify()):
+        link = link[6:-1]
+        try: # In the rare cases of getting a really weird link
+            if link[:8] != "https://":
+                continue
+            if link[-4:] == ".pdf":
+                continue
+            if link[-4:] == ".jpg":
+                continue
+            if link[-4:] == ".zip":
+                continue
+            if link[-5:] == ".docx":
+                continue
+            found_URLs.append(link)
+        except:
+            pass
+
+    return found_URLs
+
 
 def find_all_phone_numbers(input):
     numbers_found = []
@@ -86,25 +82,25 @@ def find_all_phone_numbers(input):
         if result not in numbers_found:
             numbers_found.append(result)
 
-    results = re.findall("^\+\d\d \d\d \d\d \d\d", input)
+    results = re.findall("^[+]\d\d \d\d \d\d \d\d", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
             numbers_found.append(result)
 
-    results = re.findall("\+ *\d\d \d\d \d\d \d\d \d\d", input)
+    results = re.findall("\+\d\d \d\d \d\d \d\d \d\d", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
             numbers_found.append(result)
 
-    results = re.findall("^\+\d\d\d \d\d \d\d\d", input)
+    results = re.findall("^[+]\d\d\d \d\d \d\d\d", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
             numbers_found.append(result)
 
-    results = re.findall("\+ *\d\d\d \d\d \d\d\d", input)
+    results = re.findall("\+\d\d[ ]*\d\d\d \d\d \d\d\d", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
@@ -113,8 +109,6 @@ def find_all_phone_numbers(input):
     for number in numbers_found:
         if number[:3] != "+47":
             number = "+47" + number
-
-    numbers_found = set(numbers_found)
 
     """
     # This finds North American numbers as well, but also a lot of crap
@@ -320,13 +314,16 @@ for url in URLs_to_crawl:
                 list_of_words_found.append([word, amount])
 
     # Look for comments in the source code
-    result = URL_soup.prettify().split("\n")
-    for n in range(len(result)):
-        temp = re.findall("<!-- .* -->", result[n])
-        if temp is not None:
-        #if "<!--" in result[n]:
-            for index in temp:
-                list_of_comments_found.append([index[5:-4], n, url])
+    try: # Can get a recursion error when decoding websites
+        result = URL_soup.prettify().split("\n")
+        for n in range(len(result)):
+            temp = re.findall("<!-- .* -->", result[n])
+            if temp is not None:
+            #if "<!--" in result[n]:
+                for index in temp:
+                    list_of_comments_found.append([index[5:-4], n, url])
+    except:
+        continue
 
 
 
@@ -441,7 +438,7 @@ if print_comments_found == True:
 
 
 
-print("\n\n\n--------------------\nProgram finished\n\n\n")
+print("\n\n\n--------------------\n\nProgram finished\n\n\n")
 
 
 
