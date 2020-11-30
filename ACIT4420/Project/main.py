@@ -24,9 +24,11 @@ import re
 
 
 
-# Set to True to output info
+# Set to True to output info while searching
 print_url_checking = False
 print_scraping = False
+
+# Set to True to output results
 print_found_emails = False
 print_found_phone_numbers = False
 print_found_words = False
@@ -34,7 +36,7 @@ print_most_frequently_used_words = False
 print_comments_found = False
 print_user_defined_regexes = True
 print_number_of_words_found = False
-print_words_with_more_than_one_occurence = False
+print_number_of_words_with_more_than_one_occurence = False
 
 
 
@@ -46,16 +48,16 @@ def find_all_URLs(URL):
         return []
     URL_soup = BeautifulSoup(result.content, 'html.parser')
 
-    for link in re.findall("href\=\"https[:\/.a-zA-Z0-9]+\"", URL_soup.prettify()):
+    for link in re.findall("href\=\"https://[:\/.a-zA-Z0-9]+\"", URL_soup.prettify()):
         link = link[6:-1]
         try: # In the rare cases of getting a really weird link
-            if link[:8] != "https://":
-                continue
             if link[-4:] == ".pdf":
                 continue
             if link[-4:] == ".jpg":
                 continue
             if link[-4:] == ".zip":
+                continue
+            if link[-4:] == ".css":
                 continue
             if link[-5:] == ".docx":
                 continue
@@ -64,7 +66,6 @@ def find_all_URLs(URL):
             pass
 
     return found_URLs
-
 
 def find_all_phone_numbers(input):
     numbers_found = []
@@ -106,9 +107,9 @@ def find_all_phone_numbers(input):
         if result not in numbers_found:
             numbers_found.append(result)
 
-    for number in numbers_found:
-        if number[:3] != "+47":
-            number = "+47" + number
+    for n in range(len(numbers_found)):
+        if numbers_found[n][:3] != "+47":
+            numbers_found[n] = "+47" + numbers_found[n]
 
     """
     # This finds North American numbers as well, but also a lot of crap
@@ -135,7 +136,7 @@ def find_all_words(input):
     for result in re.findall("[a-zA-ZæøåÆØÅ'\-]+", input):
         result = result.lower()
 
-        if result == "-" or result == "--":
+        if result == "-" or result == "--": # This is sometimes used to create space, like separating lines or football scores
             continue
         if result[0] == "-":
             result = result[1:]
@@ -290,38 +291,48 @@ for url in URLs_to_crawl:
         print("Now scraping:", url)
 
     # Looks for phone numbers
-    for number in find_all_phone_numbers(URL_soup.get_text()):
+    for result in re.findall("href\=\"tel:[\d ]+\"", URL_soup.prettify()):
+        result = result[10:-1]
+        result = result.replace(" ", "")
+        if result[:3] != "+47":
+            result = "+47" + result
+        if result not in list_of_phone_numbers_found:
+            list_of_phone_numbers_found.append(result)
+
+    for number in find_all_phone_numbers(" ".join(URL_soup.stripped_strings)):
         if number not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(number)
 
     # Looks for emails
-    for email in find_all_emails(URL_soup.get_text()):
+    for result in re.findall("href\=\"mailto:[.]+\"", URL_soup.prettify()):
+        result = result[13:-1]
+        if result not in list_of_emails_found:
+            list_of_emails_found.append(result)
+
+    for email in find_all_emails(" ".join(URL_soup.stripped_strings)):
         if email not in list_of_emails_found:
             list_of_emails_found.append(email)
 
     # Looks for valid words
     for word, amount in find_all_words(" ".join(URL_soup.stripped_strings)):
-        word_found = False
+        word_already_found = False
         if len(list_of_words_found) == 0:
             list_of_words_found.append([word, amount])
         else:
             for n in range(len(list_of_words_found)):
                 if list_of_words_found[n][0] == word:
-                    word_found = True
+                    word_already_found = True
                     list_of_words_found[n][1] += amount
                     break
-            if word_found == False:
+            if word_already_found == False:
                 list_of_words_found.append([word, amount])
 
     # Look for comments in the source code
     try: # Can get a recursion error when decoding websites
-        result = URL_soup.prettify().split("\n")
+        result = URL_soup.prettify().split("\n") # Splits at line to check where the comment is
         for n in range(len(result)):
-            temp = re.findall("<!-- .* -->", result[n])
-            if temp is not None:
-            #if "<!--" in result[n]:
-                for index in temp:
-                    list_of_comments_found.append([index[5:-4], n, url])
+            for index in re.findall("<!-- .* -->", result[n]):
+                list_of_comments_found.append([index[5:-4], n, url])
     except:
         continue
 
@@ -341,17 +352,16 @@ print("\n-----\n\n")
 
 
 
-
 if print_number_of_words_found == True:
     print("\nNumber of words found:", len(list_of_words_found))
 
-words_with_more_than_one_occurence = 0
+number_of_words_with_more_than_one_occurence = 0
 for word, amount in list_of_words_found:
     if amount > 1:
-        words_with_more_than_one_occurence += 1
+        number_of_words_with_more_than_one_occurence += 1
 
-if print_words_with_more_than_one_occurence == True:
-    print("Words with more than one occurence:", words_with_more_than_one_occurence)
+if print_number_of_words_with_more_than_one_occurence == True:
+    print("Number of words with more than one occurence:", number_of_words_with_more_than_one_occurence)
 
 print("\nNumber of URLs scraped:", len(URLs_to_crawl), "\n")
 
