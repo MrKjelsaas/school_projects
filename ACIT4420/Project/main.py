@@ -291,28 +291,26 @@ for url in URLs_to_crawl:
         print("Now scraping:", url)
 
     # Looks for phone numbers
-    for result in re.findall("href\=\"tel:[\d ]+\"", URL_soup.prettify()):
+    for result in re.findall("href=\"tel:.+\"", URL_soup.prettify()):
         result = result[10:-1]
         result = result.replace(" ", "")
-        if result[:3] != "+47":
-            result = "+47" + result
         if result not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(result)
-
+    """
     for number in find_all_phone_numbers(" ".join(URL_soup.stripped_strings)):
         if number not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(number)
-
+    """
     # Looks for emails
-    for result in re.findall("href\=\"mailto:[.]+\"", URL_soup.prettify()):
+    for result in re.findall("href=\"mailto:.+\"", URL_soup.prettify()):
         result = result[13:-1]
         if result not in list_of_emails_found:
             list_of_emails_found.append(result)
-
+    """
     for email in find_all_emails(" ".join(URL_soup.stripped_strings)):
         if email not in list_of_emails_found:
             list_of_emails_found.append(email)
-
+    """
     # Looks for valid words
     for word, amount in find_all_words(" ".join(URL_soup.stripped_strings)):
         word_already_found = False
