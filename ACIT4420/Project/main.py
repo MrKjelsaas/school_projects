@@ -21,49 +21,56 @@ The program should provide the following features:
 import requests
 from bs4 import BeautifulSoup
 import re
-import string
+
+
+
+# Set to True to output info
+print_url_checking = False
+print_scraping = False
+print_found_emails = False
+print_found_phone_numbers = False
+print_found_words = False
+print_most_frequently_used_words = False
+print_comments_found = False
+print_user_defined_regexes = True
+print_number_of_words_found = False
+print_words_with_more_than_one_occurence = False
 
 
 
 def find_all_URLs(URL):
+    found_URLs = []
     try:
-        found_URLs = []
-        try:
-            result = requests.get(URL, timeout=5)
-        except:
-            return []
-        URL_soup = BeautifulSoup(result.content, 'html.parser')
-
-        for URL in URL_soup.find_all('a'):
-            link = URL.get('href')
-            try:
-                if link[:5] != "https":
-                    continue
-                if link in found_URLs:
-                    continue
-                if link[-4:] == ".pdf":
-                    continue
-                if link[-4:] == ".jpg":
-                    continue
-                if link[-4:] == ".zip":
-                    continue
-                if link[-5:] == ".docx":
-                    continue
-
-                found_URLs.append(URL.get('href'))
-            except:
-                pass
-
-        return found_URLs
-
+        result = requests.get(URL, timeout=5)
     except:
         return []
+    URL_soup = BeautifulSoup(result.content, 'html.parser')
+
+    for link in re.findall("href\=\"https[:\/.a-zA-Z0-9]+\"", URL_soup.prettify()):
+        link = link[6:-1]
+        try: # In the rare cases of getting a really weird link
+            if link[:8] != "https://":
+                continue
+            if link[-4:] == ".pdf":
+                continue
+            if link[-4:] == ".jpg":
+                continue
+            if link[-4:] == ".zip":
+                continue
+            if link[-5:] == ".docx":
+                continue
+            found_URLs.append(link)
+        except:
+            pass
+
+    return found_URLs
+
 
 def find_all_phone_numbers(input):
     numbers_found = []
 
     # Looking for Norwegian phone numbers on the standard form
-    results = re.findall("\d{8}", input)
+    results = re.findall("^\+\d{8}", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
@@ -75,29 +82,33 @@ def find_all_phone_numbers(input):
         if result not in numbers_found:
             numbers_found.append(result)
 
-    results = re.findall("^\+\d\d \d\d \d\d \d\d", input)
+    results = re.findall("^[+]\d\d \d\d \d\d \d\d", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
             numbers_found.append(result)
 
-    results = re.findall("\+ *\d\d \d\d \d\d \d\d \d\d", input)
+    results = re.findall("\+\d\d \d\d \d\d \d\d \d\d", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
             numbers_found.append(result)
 
-    results = re.findall("^\+\d\d\d \d\d \d\d\d", input)
+    results = re.findall("^[+]\d\d\d \d\d \d\d\d", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
             numbers_found.append(result)
 
-    results = re.findall("\+ *\d\d\d \d\d \d\d\d", input)
+    results = re.findall("\+\d\d[ ]*\d\d\d \d\d \d\d\d", input)
     for result in results:
         result = result.replace(" ", "")
         if result not in numbers_found:
             numbers_found.append(result)
+
+    for number in numbers_found:
+        if number[:3] != "+47":
+            number = "+47" + number
 
     """
     # This finds North American numbers as well, but also a lot of crap
@@ -112,18 +123,33 @@ def find_all_phone_numbers(input):
 def find_all_emails(input):
     emails_found = []
 
-    results = re.findall("\w+@\w+\.[a-zA-Z]{2,4}", input)
+    results = re.findall("[\w\.\-\_]+@\w+\.[a-zA-Z]{2,4}", input)
     for result in results:
         if result not in emails_found:
             emails_found.append(result)
 
     return emails_found
 
+def find_all_words(input):
+    words_found = []
+    for result in re.findall("[a-zA-ZæøåÆØÅ'\-]+", input):
+        result = result.lower()
+
+        if result == "-" or result == "--":
+            continue
+        if result[0] == "-":
+            result = result[1:]
+        if result[-1] == "-":
+            result = result[:-1]
+
+        if result not in words_found:
+            words_found.append([result, 1])
+        else:
+            words_found.index(result)[1] += 1
+    return words_found
 
 
-# Set to True to output which URL is being searched
-print_url_checking = False
-print_scraping = False
+
 
 
 
@@ -135,7 +161,7 @@ print_scraping = False
 
 
 # Create a python project that is able to download websites and capture sensitive data on the site
-print("\n----------\n\nWelcome to my web crawler")
+print("\n\n\n--------------------\n\n\nWelcome to my web crawler")
 
 # The program has to accept the following parameters:
 # - The start URL of the web crawling
@@ -173,6 +199,7 @@ while valid_crawl_debth == False:
         print("Invalid debth, please try again\n(hint: must be an integer)")
 
 del valid_crawl_debth
+
 print("\nCrawling", start_url, "with a debth of", crawl_debth, "\n")
 
 # - User defined regular expressions to find sensitive data
@@ -243,80 +270,96 @@ print("\n")
 
 
 
-print("Starting to scrape the found URLs\n")
-valid_symbols = string.ascii_lowercase + "æøå-'" # We assume that valid words only contain latin letters and dashes and apostrophes
+print("Starting to scrape", len(URLs_to_crawl), "URLs\n")
+
 list_of_words_found = []
 list_of_phone_numbers_found = []
 list_of_emails_found = []
+list_of_comments_found = []
 
 for url in URLs_to_crawl:
     try:
         result = requests.get(url, timeout=5)
     except:
         continue
+
+    # Extracts the text from a website
     URL_soup = BeautifulSoup(result.content, 'html.parser')
 
     if print_scraping == True:
         print("Now scraping:", url)
 
-    # Extracts the text from a website
-    URL_text = " ".join(URL_soup.strings)
-
-
-
     # Looks for phone numbers
-    for number in find_all_phone_numbers(URL_text):
+    for number in find_all_phone_numbers(URL_soup.get_text()):
         if number not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(number)
 
     # Looks for emails
-    for email in find_all_emails(URL_text):
+    for email in find_all_emails(URL_soup.get_text()):
         if email not in list_of_emails_found:
             list_of_emails_found.append(email)
 
     # Looks for valid words
-    URL_text = URL_text.split()
+    for word, amount in find_all_words(" ".join(URL_soup.stripped_strings)):
+        word_found = False
+        if len(list_of_words_found) == 0:
+            list_of_words_found.append([word, amount])
+        else:
+            for n in range(len(list_of_words_found)):
+                if list_of_words_found[n][0] == word:
+                    word_found = True
+                    list_of_words_found[n][1] += amount
+                    break
+            if word_found == False:
+                list_of_words_found.append([word, amount])
 
-    for word in URL_text:
-        nameholder = ""
-        for character in word:
-            if character.lower() in valid_symbols:
-                nameholder += character.lower()
-            else: # If word contains invalid character, skip it
-                nameholder = ""
-                break
-        if len(nameholder) > 0: # If it found a word
-            if len(list_of_words_found) > 0: # Check if it is already found
-                for n in range(len(list_of_words_found)):
-                    if nameholder == list_of_words_found[n][0]:
-                        list_of_words_found[n][1] += 1
-                        break
-                    elif n == len(list_of_words_found)-1:
-                        list_of_words_found.append([nameholder, 1])
-            elif len(list_of_words_found) == 0:
-                list_of_words_found.append([nameholder, 1])
-
-
+    # Look for comments in the source code
+    try: # Can get a recursion error when decoding websites
+        result = URL_soup.prettify().split("\n")
+        for n in range(len(result)):
+            temp = re.findall("<!-- .* -->", result[n])
+            if temp is not None:
+            #if "<!--" in result[n]:
+                for index in temp:
+                    list_of_comments_found.append([index[5:-4], n, url])
+    except:
+        continue
 
 
 
 
 
 print("\nFinished scraping the URLs\n")
+print("\n-----\n\n")
 
-print("\nNumber of words found:", len(list_of_words_found))
+
+
+
+
+
+
+
+
+
+
+if print_number_of_words_found == True:
+    print("\nNumber of words found:", len(list_of_words_found))
 
 words_with_more_than_one_occurence = 0
 for word, amount in list_of_words_found:
     if amount > 1:
         words_with_more_than_one_occurence += 1
-print("Words with more than one occurence:", words_with_more_than_one_occurence)
+
+if print_words_with_more_than_one_occurence == True:
+    print("Words with more than one occurence:", words_with_more_than_one_occurence)
 
 print("\nNumber of URLs scraped:", len(URLs_to_crawl), "\n")
 
 
 
-print("\nLooking for user defined regexes\n")
+
+
+# Shows occurence of user defined regexes
 occurence_of_user_regexes = []
 for regex in user_defined_regexes:
     occurence_of_user_regexes.append([regex, 0])
@@ -326,9 +369,16 @@ for i in range(len(user_defined_regexes)):
         if list_of_words_found[j][0] == user_defined_regexes[i]:
             occurence_of_user_regexes[i][1] = list_of_words_found[j][1]
             break
+if print_user_defined_regexes == True:
+    for user_regex, occurence in occurence_of_user_regexes:
+        print(user_regex, "occured", occurence, "times")
 
-for user_regex, occurence in occurence_of_user_regexes:
-    print(user_regex, "occured", occurence, "times")
+
+
+# Shows all words found
+if print_found_words == True:
+    for n in range(len(list_of_words_found)):
+        print(list_of_words_found[n][0])
 
 
 # Shows all emails found
@@ -336,10 +386,11 @@ if len(list_of_emails_found) == 0:
     print("\nDidn't find any emails")
 else:
     print("\nNumber of emails found:", len(list_of_emails_found))
+    if print_found_emails is True:
+        print("Emails found:")
+        for email in list_of_emails_found:
+            print(email)
 
-    print("Emails found:")
-    for email in list_of_emails_found:
-        print(email)
 
 
 # Shows all phone numbers found
@@ -347,15 +398,32 @@ if len(list_of_phone_numbers_found) == 0:
     print("\nDidn't find any phone numbers")
 else:
     print("\nNumber of phone numbers found:", len(list_of_phone_numbers_found))
-
-    print("Phone numbers found:")
-    for number in list_of_phone_numbers_found:
-        print(number)
-
-
+    if print_found_phone_numbers is True:
+        print("Phone numbers found:")
+        for number in list_of_phone_numbers_found:
+            print(number)
 
 
 
+# Shows the most frequently used words
+list_of_words_found = sorted(list_of_words_found, key=lambda l:l[1], reverse=True)
+if print_most_frequently_used_words == True:
+    print("\n")
+    if len(list_of_words_found) < 10:
+        for n in range(len(list_of_words_found)):
+            print("\"", list_of_words_found[n][0], "\"", " occured ", list_of_words_found[n][1], " times", sep="")
+    else:
+        for n in range(10):
+            print("\"", list_of_words_found[n][0], "\"", " occured ", list_of_words_found[n][1], " times", sep="")
+    print("\n")
+
+
+
+# Shows all comments found
+print("\nFound", len(list_of_comments_found), "comments")
+if print_comments_found == True:
+    for n in range(len(list_of_comments_found)):
+        print("Comment: ", "\"", list_of_comments_found[n][0], "\"\n", "occured on line ", list_of_comments_found[n][1], " at url\n", list_of_comments_found[n][2], sep="", end="\n\n")
 
 
 
@@ -366,6 +434,35 @@ else:
 
 
 
+
+
+
+
+print("\n\n\n--------------------\n\nProgram finished\n\n\n")
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+To do:
+- Validere ekte telefonnumre
+    - Jeg får forholde meg til kun norske numre enn så lenge
+    - Numre som begynner på 00 i stedet for +
+
+- Inkludere flere bokstaver når man leter etter ord?
+    - ü é osv.
+
+
+
+"""
 
 
 
