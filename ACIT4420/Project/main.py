@@ -15,8 +15,9 @@ The program should provide the following features:
 - Identify comments inside the source code and make a list of them indicating the file name and line number of the comment
 - Identify special data using the user provided regular expression
 - Create a list of the most common words used on the crawled websites
-
 """
+
+
 
 import requests
 from bs4 import BeautifulSoup
@@ -38,6 +39,8 @@ print_user_defined_regexes = True
 print_number_of_words_found = False
 print_number_of_words_with_more_than_one_occurence = False
 
+# Set to False to only search for exact words
+allow_partial_user_defined_regexes = True
 
 
 def find_all_URLs(URL):
@@ -54,6 +57,8 @@ def find_all_URLs(URL):
             if link[-4:] == ".pdf":
                 continue
             if link[-4:] == ".jpg":
+                continue
+            if link[-4:] == ".png":
                 continue
             if link[-4:] == ".zip":
                 continue
@@ -209,7 +214,7 @@ inputting_defined_regexes_is_done = False
 while inputting_defined_regexes_is_done == False:
     regex_input = str(input("Please enter a word to look for (leave blank to finish): "))
     if len(regex_input) > 0:
-        user_defined_regexes.append(regex_input.lower())
+        user_defined_regexes.append([regex_input.lower(), 0])
     if len(regex_input) == 0:
         inputting_defined_regexes_is_done = True
 
@@ -271,6 +276,7 @@ print("\n")
 
 
 
+
 print("Starting to scrape", len(URLs_to_crawl), "URLs\n")
 
 list_of_words_found = []
@@ -291,27 +297,31 @@ for url in URLs_to_crawl:
         print("Now scraping:", url)
 
     # Looks for phone numbers
-    for result in re.findall("href=\"tel:.+\"", URL_soup.prettify()):
+    for result in re.findall("href=\"tel:[\+0-9 \(\)-\.]+\"", URL_soup.prettify()):
         result = result[10:-1]
         result = result.replace(" ", "")
         if result not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(result)
-    """
+
+    """ # Uncomment here to manually search the string
     for number in find_all_phone_numbers(" ".join(URL_soup.stripped_strings)):
         if number not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(number)
     """
+
     # Looks for emails
-    for result in re.findall("href=\"mailto:.+\"", URL_soup.prettify()):
+    for result in re.findall("href=\"mailto:[a-zA-ZæøåÆØÅ@\.0-9]+\"", URL_soup.prettify()):
         result = result[13:-1]
         if result not in list_of_emails_found:
             list_of_emails_found.append(result)
-    """
+
+    """ # Uncomment here to manually search the string
     for email in find_all_emails(" ".join(URL_soup.stripped_strings)):
         if email not in list_of_emails_found:
             list_of_emails_found.append(email)
     """
-    # Looks for valid words
+
+    # Looks for all valid words
     for word, amount in find_all_words(" ".join(URL_soup.stripped_strings)):
         word_already_found = False
         if len(list_of_words_found) == 0:
@@ -333,6 +343,12 @@ for url in URLs_to_crawl:
                 list_of_comments_found.append([index[5:-4], n, url])
     except:
         continue
+
+    # If we allow partial user defined regexes
+    if allow_partial_user_defined_regexes == True:
+        for n in range(len(user_defined_regexes)):
+            user_defined_regexes[n][1] += len(re.findall(user_defined_regexes[n][0], " ".join(URL_soup.stripped_strings).lower()))
+
 
 
 
@@ -368,17 +384,15 @@ print("\nNumber of URLs scraped:", len(URLs_to_crawl), "\n")
 
 
 # Shows occurence of user defined regexes
-occurence_of_user_regexes = []
-for regex in user_defined_regexes:
-    occurence_of_user_regexes.append([regex, 0])
+if allow_partial_user_defined_regexes == False:
+    for i in range(len(user_defined_regexes)):
+        for j in range(len(list_of_words_found)):
+            if user_defined_regexes[i][0] == list_of_words_found[j][0]:
+                user_defined_regexes[i][1] = list_of_words_found[j][1]
+                break
 
-for i in range(len(user_defined_regexes)):
-    for j in range(len(list_of_words_found)):
-        if list_of_words_found[j][0] == user_defined_regexes[i]:
-            occurence_of_user_regexes[i][1] = list_of_words_found[j][1]
-            break
 if print_user_defined_regexes == True:
-    for user_regex, occurence in occurence_of_user_regexes:
+    for user_regex, occurence in user_defined_regexes:
         print(user_regex, "occured", occurence, "times")
 
 
@@ -459,18 +473,6 @@ print("\n\n\n--------------------\n\nProgram finished\n\n\n")
 
 
 
-"""
-To do:
-- Validere ekte telefonnumre
-    - Jeg får forholde meg til kun norske numre enn så lenge
-    - Numre som begynner på 00 i stedet for +
-
-- Inkludere flere bokstaver når man leter etter ord?
-    - ü é osv.
-
-
-
-"""
 
 
 
