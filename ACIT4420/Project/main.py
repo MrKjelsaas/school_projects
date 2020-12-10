@@ -43,6 +43,7 @@ print_most_frequently_used_words = True
 print_found_phone_numbers = False
 print_found_emails = False
 print_comments_found = False
+print_all_URLs_found = False
 
 # Set to False to only search for exact words
 allow_partial_user_defined_regexes = False
@@ -280,8 +281,14 @@ while depth_crawled < crawl_depth + 1:
 
 print("\nDone looking for URLs\n")
 
-total_URLs_found = len(URLs_to_crawl) + len(next_depth_URLs)
-print("Number of URLs found:", total_URLs_found)
+all_URLs = []
+for url in URLs_to_crawl:
+    all_URLs.append(url)
+for url in next_depth_URLs:
+    if url not in all_URLs:
+        all_URLs.append(url)
+
+print("Number of URLs found:", len(all_URLs))
 print("\n")
 
 
@@ -497,7 +504,10 @@ if print_comments_found == True:
     for n in range(len(list_of_comments_found)):
         print("Comment: ", list_of_comments_found[n][0], "\n", "occured on line ", list_of_comments_found[n][1], " at url\n", list_of_comments_found[n][2], sep="", end="\n\n")
 
-
+# Shows all URLs found
+if print_all_URLs_found == True:
+    for url in all_URLs:
+        print(url)
 
 
 
