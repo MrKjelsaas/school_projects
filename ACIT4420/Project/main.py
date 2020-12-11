@@ -22,7 +22,14 @@ The program should provide the following features:
 import requests
 from bs4 import BeautifulSoup
 import re
+from selenium import webdriver
 from string import ascii_lowercase
+
+# Setting some configuration for the webdriver
+op = webdriver.ChromeOptions()
+op.add_argument('--headless') # Disables rendering og website
+op.add_argument("--log-level=3") # Disables (most) output of log
+driver = webdriver.Chrome(options=op)
 
 
 
@@ -53,14 +60,16 @@ allow_partial_user_defined_regexes = False
 def find_all_URLs(URL):
     found_URLs = []
     try:
-        result = requests.get(URL, timeout=5)
+        driver.get(URL)
+        elements = driver.find_elements_by_xpath("//a[@href]")
     except:
         return []
-    URL_soup = BeautifulSoup(result.content, 'html.parser')
 
-    for link in re.findall("href\=\"https://[:\/.a-zA-Z0-9]+\"", URL_soup.prettify()):
-        link = link[6:-1]
+    for elem in elements:
         try: # In the rare cases of getting a really weird link
+            link = elem.get_attribute("href")
+            if link[:8] != "https://":
+                continue
             if link[-4:] == ".pdf":
                 continue
             if link[-4:] == ".jpg":
@@ -265,7 +274,8 @@ while depth_crawled < crawl_depth + 1:
         if print_url_checking == True:
             print("Finding URLs in:", url)
 
-        for found_url in find_all_URLs(url): # Finds URLs on a page and appends them if it's not already found
+        # Finds URLs on a page and appends them if it's not already found
+        for found_url in find_all_URLs(url):
             if found_url not in found_URLs:
                 if found_url not in next_depth_URLs:
                     if found_url not in URLs_to_crawl:
@@ -312,21 +322,48 @@ list_of_comments_found = []
 for url in URLs_to_crawl:
     try:
         result = requests.get(url, timeout=5)
+        driver.get(url)
+        elements = driver.find_elements_by_xpath("//a[@href]")
     except:
         continue
 
-    # Extracts the text from a website
+    # Extracts the contents of a website
     URL_soup = BeautifulSoup(result.content, 'html.parser')
 
     if print_scraping == True:
         print("Now scraping:", url)
 
+    # Looks for phone numbers and e-mails
+    for elem in elements:
+        try:
+            link = elem.get_attribute("href")
+            if link[:4] == "tel:":
+                phone_number = link[:4]
+                phone_number = phone_number.replace(" ", "")
+                if phone_number not in list_of_phone_numbers_found:
+                    list_of_phone_numbers_found.append(phone_number)
+            elif link[:4] == "sms:":
+                phone_number = link[:4]
+                phone_number = phone_number.replace(" ", "")
+                if phone_number not in list_of_phone_numbers_found:
+                    list_of_phone_numbers_found.append(phone_number)
+            elif link[:7] == "mailto:":
+                email = link[7:]
+                if "@" not in email: # Just a precaution, it happens
+                    continue
+                if email not in list_of_emails_found:
+                    list_of_emails_found.append(email)
+        except:
+            pass
+
     # Looks for phone numbers
+    """ # This can be used for faster searching of static websites
     for result in re.findall("href=\"tel:[\+0-9 \(\)\-\.]+\"", URL_soup.prettify()):
         result = result[10:-1]
         result = result.replace(" ", "")
         if result not in list_of_phone_numbers_found:
             list_of_phone_numbers_found.append(result)
+    """
 
     """ # Uncomment here to manually search the string
     for number in find_all_phone_numbers(" ".join(URL_soup.stripped_strings)):
@@ -334,11 +371,13 @@ for url in URLs_to_crawl:
             list_of_phone_numbers_found.append(number)
     """
 
-    # Looks for emails
+    # Looks for e-mails
+    """ # This can be used for faster searching of static websites
     for result in re.findall("href=\"mailto:[a-zA-ZæøåÆØÅ@\.0-9]+\"", URL_soup.prettify()):
         result = result[13:-1]
         if result not in list_of_emails_found:
             list_of_emails_found.append(result)
+    """
 
     """ # Uncomment here to manually search the string
     for email in find_all_emails(" ".join(URL_soup.stripped_strings)):
@@ -391,7 +430,6 @@ for url in URLs_to_crawl:
     if allow_partial_user_defined_regexes == True:
         for n in range(len(user_defined_regexes)):
             user_defined_regexes[n][1] += len(re.findall(user_defined_regexes[n][0], " ".join(URL_soup.stripped_strings).lower()))
-
 
 
 
