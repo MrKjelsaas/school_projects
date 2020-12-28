@@ -15,14 +15,17 @@ agent_starting_position[1] = 750
 agent_starting_velocity = np.zeros(number_of_dimensions)
 agent_starting_acceleration = np.zeros(number_of_dimensions)
 
-optimal_distance_between_agents = 5
+optimal_distance_between_agents = 10
+distance_between_agents_coefficient = 0.2
+approach_line_coefficient = 0.2 # NEEDS A BETTER VARIABLE NAME
+
 
 
 
 dt = 1
 acceleration_coefficient = 0.1
 
-number_of_steps = 250
+number_of_steps = 150
 
 live_visualisation = True
 
@@ -113,7 +116,7 @@ for step in range(number_of_steps):
         y1 = (-b*c) / (a**2 + b**2)
         # Placeholder for the next position
         to_move = np.array([x1, y1])
-        to_move *= 0.1
+        to_move *= approach_line_coefficient
         # Moves the agent towards the line
         agents[agent].position[0] += to_move[0]
         agents[agent].position[1] += to_move[1]
@@ -131,7 +134,7 @@ for step in range(number_of_steps):
 
         to_move = np.array([neighbor_positions[closest_neighbor, 1], neighbor_positions[closest_neighbor, 2]])
         factor = sigmoid(optimal_distance_between_agents - distance_between(np.array([0, 0]), to_move)) - 0.5
-        to_move *= -factor * 1
+        to_move *= -factor * distance_between_agents_coefficient
         #print(to_move)
         #exit()
 
@@ -145,6 +148,7 @@ for step in range(number_of_steps):
                 movement *= -factor * 1
                 to_move += movement
         """
+        # Updates agent position
         agents[agent].position[0] += to_move[0]
         agents[agent].position[1] += to_move[1]
 
@@ -156,9 +160,10 @@ for step in range(number_of_steps):
     # Used to print out information mainly for debuggin
     if step % (number_of_steps/10) == 0:
         pass
-        print(factor)
+
         for n in range(number_of_agents):
             print(agents[n].position)
+        print("")
         for n in range(number_of_agents):
             print(distance_between(agents[0].position, agents[n].position))
         print("\n\n")
