@@ -15,9 +15,10 @@ agent_starting_position[1] = 750
 agent_starting_velocity = np.zeros(number_of_dimensions)
 agent_starting_acceleration = np.zeros(number_of_dimensions)
 
-optimal_distance_between_agents = 10
-distance_between_agents_coefficient = 0.2
-approach_line_coefficient = 0.2 # NEEDS A BETTER VARIABLE NAME
+optimal_distance_between_agents = 5
+distance_between_agents_coefficient = 0.1
+approach_line_coefficient = 0.1 # NEEDS A BETTER VARIABLE NAME
+
 
 
 
@@ -25,7 +26,7 @@ approach_line_coefficient = 0.2 # NEEDS A BETTER VARIABLE NAME
 dt = 1
 acceleration_coefficient = 0.1
 
-number_of_steps = 150
+number_of_steps = 100
 
 live_visualisation = True
 
@@ -121,7 +122,7 @@ for step in range(number_of_steps):
         agents[agent].position[0] += to_move[0]
         agents[agent].position[1] += to_move[1]
 
-        # Moves agent away from closest neighbor
+        # Finds closest neighbor
         to_move = np.zeros([number_of_dimensions])
         neighbor_positions = np.zeros([number_of_agents, number_of_dimensions+1])
         for n in range(number_of_agents):
@@ -132,11 +133,11 @@ for step in range(number_of_steps):
         shortest_distance = np.sort(neighbor_positions, axis=0)[1, 0]
         closest_neighbor = np.where(neighbor_positions == shortest_distance)[0][0]
 
+        # Moves agent away from closest neighbor
         to_move = np.array([neighbor_positions[closest_neighbor, 1], neighbor_positions[closest_neighbor, 2]])
         factor = sigmoid(optimal_distance_between_agents - distance_between(np.array([0, 0]), to_move)) - 0.5
         to_move *= -factor * distance_between_agents_coefficient
-        #print(to_move)
-        #exit()
+
 
 
         """ Moves the agent away from all other agents
@@ -178,8 +179,8 @@ for step in range(number_of_steps):
         for agent in agents:
             ax.scatter(agent.position[0], agent.position[1])
 
-        #ax.set_xlim([494, 505])
-        #ax.set_ylim([-494, -505])
+        ax.set_xlim([agent_starting_position[0] - number_of_agents*optimal_distance_between_agents/2, agent_starting_position[0] + number_of_agents*optimal_distance_between_agents/2])
+        ax.set_ylim([agent_starting_position[1] - number_of_agents*optimal_distance_between_agents/2, agent_starting_position[1] + number_of_agents*optimal_distance_between_agents/2])
 
         plt.draw()
         plt.show()
