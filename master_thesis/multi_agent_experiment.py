@@ -15,8 +15,8 @@ agent_starting_position[1] = 750
 agent_starting_velocity = np.zeros(number_of_dimensions)
 agent_starting_acceleration = np.zeros(number_of_dimensions)
 
-optimal_distance_between_agents = 5
-distance_between_agents_coefficient = 0.1
+optimal_distance_between_agents = 10
+distance_between_agents_coefficient = 0.2
 approach_line_coefficient = 0.1 # NEEDS A BETTER VARIABLE NAME
 
 
@@ -26,7 +26,7 @@ approach_line_coefficient = 0.1 # NEEDS A BETTER VARIABLE NAME
 dt = 1
 acceleration_coefficient = 0.1
 
-number_of_steps = 100
+number_of_steps = 125
 
 live_visualisation = True
 
@@ -74,7 +74,7 @@ agents = [deepcopy(Agent()) for n in range(number_of_agents)]
 
 # agent_positions the agents randomly spread out
 for agent in agents:
-    agent.move_randomly(step=5)
+    agent.move_randomly(step=50)
 
 # Visualizes starting position of agents
 if number_of_dimensions == 2:
@@ -112,18 +112,16 @@ for step in range(number_of_steps):
         # Calculate least squares line
         a, c = np.linalg.lstsq(x, y, rcond=None)[0]
         b = -1
+
         # Calculates closes point of the least squares line
         x1 = (-a*c) / (a**2 + b**2)
         y1 = (-b*c) / (a**2 + b**2)
+
         # Placeholder for the next position
         to_move = np.array([x1, y1])
         to_move *= approach_line_coefficient
-        # Moves the agent towards the line
-        agents[agent].position[0] += to_move[0]
-        agents[agent].position[1] += to_move[1]
 
         # Finds closest neighbor
-        to_move = np.zeros([number_of_dimensions])
         neighbor_positions = np.zeros([number_of_agents, number_of_dimensions+1])
         for n in range(number_of_agents):
             neighbor_positions[n, 0] = distance_between(np.array([0, 0]), [x[n, 0], y[n, 0]])
@@ -133,11 +131,32 @@ for step in range(number_of_steps):
         shortest_distance = np.sort(neighbor_positions, axis=0)[1, 0]
         closest_neighbor = np.where(neighbor_positions == shortest_distance)[0][0]
 
-        # Moves agent away from closest neighbor
-        to_move = np.array([neighbor_positions[closest_neighbor, 1], neighbor_positions[closest_neighbor, 2]])
-        factor = sigmoid(optimal_distance_between_agents - distance_between(np.array([0, 0]), to_move)) - 0.5
-        to_move *= -factor * distance_between_agents_coefficient
+        # Determines if an agent is at the edge
+        if min(neighbor_positions[:, 1]) == 0 or max(neighbor_positions[:, 1]) == 0:
+            agent_is_at_edge = True
+        else:
+            agent_is_at_edge = False
 
+        # If agent is at edge: Move towards closest neighbor
+        if agent_is_at_edge:
+            # Maintains distance to closest neighbor
+            movement = np.array([neighbor_positions[closest_neighbor, 1], neighbor_positions[closest_neighbor, 2]])
+            factor = sigmoid(optimal_distance_between_agents - distance_between(np.array([0, 0]), movement)) - 0.5
+            movement *= -factor * distance_between_agents_coefficient
+            to_move[0] += movement[0]
+            to_move[1] += movement[1]
+
+        else:
+            # Move towards middle of two neighbors
+            temp = np.sort(neighbor_positions[:, 1])
+            left_neighbor_position = np.array([temp[np.where(temp == 0)[0][0]-1], 0])
+            right_neighbor_position = np.array([temp[np.where(temp == 0)[0][0]+1], 0])
+            left_neighbor_position[1] = neighbor_positions[np.where(neighbor_positions[:, 1] == left_neighbor_position[0])[0][0]][2]
+            right_neighbor_position[1] = neighbor_positions[np.where(neighbor_positions[:, 1] == right_neighbor_position[0])[0][0]][2]
+            movement = np.array([(left_neighbor_position[0] + right_neighbor_position[0]) / 2, (left_neighbor_position[1] + right_neighbor_position[1]) / 2])
+            movement *= distance_between_agents_coefficient
+            to_move[0] += movement[0]
+            to_move[1] += movement[1]
 
 
         """ Moves the agent away from all other agents
@@ -149,6 +168,7 @@ for step in range(number_of_steps):
                 movement *= -factor * 1
                 to_move += movement
         """
+
         # Updates agent position
         agents[agent].position[0] += to_move[0]
         agents[agent].position[1] += to_move[1]
@@ -161,7 +181,6 @@ for step in range(number_of_steps):
     # Used to print out information mainly for debuggin
     if step % (number_of_steps/10) == 0:
         pass
-
         for n in range(number_of_agents):
             print(agents[n].position)
         print("")
@@ -179,8 +198,10 @@ for step in range(number_of_steps):
         for agent in agents:
             ax.scatter(agent.position[0], agent.position[1])
 
-        ax.set_xlim([agent_starting_position[0] - number_of_agents*optimal_distance_between_agents/2, agent_starting_position[0] + number_of_agents*optimal_distance_between_agents/2])
-        ax.set_ylim([agent_starting_position[1] - number_of_agents*optimal_distance_between_agents/2, agent_starting_position[1] + number_of_agents*optimal_distance_between_agents/2])
+        #ax.set_xlim([agent_starting_position[0] - number_of_agents*optimal_distance_between_agents/2, agent_starting_position[0] + number_of_agents*optimal_distance_between_agents/2])
+        #ax.set_ylim([agent_starting_position[1] - number_of_agents*optimal_distance_between_agents/2, agent_starting_position[1] + number_of_agents*optimal_distance_between_agents/2])
+        ax.set_xlim([450, 550])
+        ax.set_ylim([700, 800])
 
         plt.draw()
         plt.show()
