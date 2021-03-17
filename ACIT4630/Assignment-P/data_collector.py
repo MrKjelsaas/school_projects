@@ -11,7 +11,11 @@ from pytz import timezone
 
 
 
-company_tickers = ["MSFT", "AAPL", "NVDA"]
+
+
+
+
+
 financial_features_names = ["Enterprise Value",
                             "Trailing P/E",
                             "Price/Sales",
@@ -32,25 +36,25 @@ financial_features_names = ["Enterprise Value",
                             "Total Debt/Equity",
                             "Operating Cash Flow"]
 financial_websites = ["https://www.forbes.com/",
-                    "https://www.marketwatch.com/",
-                    "https://www.wsj.com/",
-                    "https://bloomberg.com/",
-                    "https://www.reuters.com/",
-                    "https://finance.yahoo.com/",
-                    "https://www.investopedia.com/",
-                    "https://money.cnn.com/",
-                    "https://cnbc.com/",
-                    "https://ibtimes.com/",
-                    "https://seekingalpha.com/",
-                    "https://fortune.com/",
-                    "https://economist.com/",
-                    "https://ft.com/",
-                    "https://morningstar.com/",
-                    "https://thestreet.com/",
-                    "https://nasdaq.com/",
-                    "https://moneymorning.com/",
-                    "https://business-standard.com/",
-                    "https://kiplinger.com/"]
+                      "https://www.marketwatch.com/",
+                      "https://www.wsj.com/",
+                      "https://bloomberg.com/",
+                      "https://www.reuters.com/",
+                      "https://finance.yahoo.com/",
+                      "https://www.investopedia.com/",
+                      "https://money.cnn.com/",
+                      "https://cnbc.com/",
+                      "https://ibtimes.com/",
+                      "https://seekingalpha.com/",
+                      "https://fortune.com/",
+                      "https://economist.com/",
+                      "https://ft.com/",
+                      "https://morningstar.com/",
+                      "https://thestreet.com/",
+                      "https://nasdaq.com/",
+                      "https://moneymorning.com/",
+                      "https://business-standard.com/",
+                      "https://kiplinger.com/"]
 
 
 
@@ -101,6 +105,7 @@ def fix_number_format(x):
     try:
         return float(x)
     except ValueError:
+        x = x.replace(',', '')
         if x[-1] == '%':
             return x[:-1]
         else:
@@ -116,7 +121,7 @@ def fix_number_format(x):
 
 
 def get_financial_data(ticker):
-    financial_data = np.zeros(len(financial_features_names))
+    financial_data = np.zeros(len(financial_features_names) + len(sector_numbers))
     url = 'https://finance.yahoo.com/quote/' + ticker + '/key-statistics?p=' + ticker
     numbers = pd.read_html(url)
 
@@ -177,6 +182,9 @@ def get_financial_data(ticker):
     # Operating Cash Flow
     financial_data[18] = fix_number_format(numbers[9][1][0])
 
+    # Sector
+    financial_data[19 + sector_numbers[company_sectors[ticker]]] = 1
+
     return financial_data
 
 
@@ -219,6 +227,24 @@ def stock_market_was_open_today():
 SETUP
 """
 
+# Gather a list of S&P500 companies
+numbers = pd.read_html("https://en.m.wikipedia.org/wiki/List_of_S%26P_500_companies#S&P_500_component_stocks")
+
+sector_numbers = {}
+company_tickers = []
+company_sectors = {}
+for n in range(len(numbers[0].index)):
+    company_tickers.append(numbers[0]["Symbol"][n])
+    if numbers[0]["GICS Sector"][n] not in sector_numbers.keys():
+        sector_numbers[numbers[0]["GICS Sector"][n]] = len(sector_numbers)
+    company_sectors[numbers[0]["Symbol"][n]] = numbers[0]["GICS Sector"][n]
+
+# This one is wrong on Wikipeda
+company_tickers[company_tickers.index("BF.B")] = "BF-B"
+company_sectors["BF-B"] = company_sectors.pop("BF.B")
+
+
+
 # Make bag of words
 bag_of_words = []
 with open("Data/positive_words_en.txt", "r") as file:
@@ -241,10 +267,10 @@ with open("Data/negative_words_en.txt", "r") as file:
 """
 MAIN LOOP
 """
+
 while True:
     # Wait for stock market to open
     wait_for_stock_market_open()
-
 
     # Count occurences on the websites
     print("Reading today's headlines...\n")
@@ -262,20 +288,24 @@ while True:
 
 
 
-
-    features = np.zeros([len(company_tickers), len(financial_features_names)+len(bag_of_words)])
+    features = np.zeros([len(company_tickers), len(financial_features_names) + len(bag_of_words) + len(sector_numbers)])
+    failed_readings = []
+    print("Gathering financial data...\n")
     for ticker in company_tickers:
-        print("Gathering financial data on:", ticker)
+        try:
+            # Collect financial data
+            company_financial_data = get_financial_data(ticker)
 
-        # Collect financial data
-        company_financial_data = get_financial_data(ticker)
+            # Append the word features to the financial features
+            feature_line = np.append(company_financial_data, bag_of_words_occurences) # A single data sample
 
-        # Append the word features to the financial features
-        feature_line = np.append(company_financial_data, bag_of_words_occurences) # A single data sample
+            # The features collected for this day
+            # Has the shape "number of companies" x "number of features"
+            features[company_tickers.index(ticker), :] = feature_line
+        except:
+            print("Could not gather financial data on", ticker)
+            failed_readings.append(ticker)
 
-        # The features collected for this day
-        # Has the shape "number of companies" x "number of features"
-        features[company_tickers.index(ticker), :] = feature_line
     print("")
 
 
@@ -284,20 +314,30 @@ while True:
     wait_for_stock_market_close()
 
 
+
     # Only saves the data if the stock market was actually open
     if stock_market_was_open_today():
         # Check how the stocks went
         print("Checking how the stock market went today...\n")
         y = np.zeros([1, len(company_tickers)])
-        for ticker in company_tickers:
-            y[0, company_tickers.index(ticker)] = get_daily_result(ticker)
 
-        print("Saving data...\n")
+        for ticker in company_tickers:
+            try:
+                y[0, company_tickers.index(ticker)] = get_daily_result(ticker)
+            except:
+                print("Could not gather daily result on", ticker)
+                failed_readings.append(ticker)
 
         # Add the labels
         features = np.hstack((features, y.T))
 
+        # Remove bad data
+        for n in range(len(failed_readings)):
+            failed_readings[n] = company_tickers.index(failed_readings[n])
+        features = np.delete(features, (failed_readings), axis=0)
+
         # Save data
+        print("Saving data...\n")
         try:
             data = np.loadtxt("Data/main_data_file.txt")
             data = np.vstack((data, features))
@@ -308,5 +348,6 @@ while True:
         contents = np.loadtxt("Data/main_data_file.txt")
 
         print("We now have", np.shape(contents)[0], "data samples")
+
     else:
         print("Stock market was not open today\nNo data recorded\n")

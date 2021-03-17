@@ -11,6 +11,7 @@ data = np.loadtxt("Data/main_data_file.txt")
 x = data[:, :-1]
 y = data[:, -1]
 
+print(np.shape(data))
 
 
 
