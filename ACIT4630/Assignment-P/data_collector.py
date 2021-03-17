@@ -4,7 +4,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import re
-
+from datetime import datetime
+from pytz import timezone
 
 # New York time zone is -04:00
 # NYSE opens at 9:30 and closes at 16:00
@@ -55,35 +56,43 @@ financial_websites = ["https://www.forbes.com/",
 
 
 def wait_for_stock_market_open():
+    # NYSE opens at 09:30 in the morning
     print("Waiting for the stock market to open...\n")
-    current_hour = time.localtime()[3]
+    new_york_timezone = timezone("US/Eastern")
+    the_time = datetime.now(new_york_timezone)
+    current_hour = float(the_time.strftime('%H'))
+    current_minute = float(the_time.strftime('%M'))
 
-    while current_hour > 14:
+
+    the_time = datetime.now(new_york_timezone)
+    current_hour = float(the_time.strftime('%H'))
+
+    while current_hour >= 9:
         time.sleep(60)
-        current_hour = time.localtime()[3]
+        the_time = datetime.now(new_york_timezone)
+        current_hour = float(the_time.strftime('%H'))
 
-    while current_hour < 14:
+    while current_hour < 9:
         time.sleep(60)
-        current_hour = time.localtime()[3]
-
-    current_minute = time.localtime()[4]
-
-    while current_minute < 15:
-        time.sleep(60)
-        current_minute = time.localtime()[4]
+        the_time = datetime.now(new_york_timezone)
+        current_hour = float(the_time.strftime('%H'))
 
     return
 
 
 
 def wait_for_stock_market_close():
+    # NYSE closes at 16:00 in the afternoon
     print("Waiting for the stock market to close...\n")
-    current_hour = time.localtime()[3]
+    new_york_timezone = timezone("US/Eastern")
+    the_time = datetime.now(new_york_timezone)
+    current_hour = float(the_time.strftime('%H'))
 
     # Waits for the (american) stock market to close
-    while current_hour < 23:
+    while current_hour < 17:
         time.sleep(60)
-        current_hour = time.localtime()[3]
+        the_time = datetime.now(new_york_timezone)
+        current_hour = float(the_time.strftime('%H'))
 
     return
 

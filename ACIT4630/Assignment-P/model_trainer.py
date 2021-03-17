@@ -2,6 +2,32 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM#, CuDNNLSTM
 
+import numpy as np
+
+data = np.loadtxt("Data/main_data_file.txt")
+
+x = data[:, :-1]
+y = data[:, -1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 
 mnist = tf.keras.datasets.mnist  # mnist is a dataset of 28x28 images of handwritten digits and their labels
 (x_train, y_train),(x_test, y_test) = mnist.load_data()  # unpacks images to x_train/x_test and labels to y_train/y_test
@@ -39,3 +65,5 @@ model.fit(x_train,
           y_train,
           epochs=3,
           validation_data=(x_test, y_test))
+
+"""
