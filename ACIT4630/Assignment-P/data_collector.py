@@ -7,8 +7,7 @@ import re
 from datetime import datetime
 from pytz import timezone
 
-# New York time zone is -04:00
-# NYSE opens at 9:30 and closes at 16:00
+
 
 
 
@@ -194,6 +193,21 @@ def get_daily_result(ticker):
 
 
 
+def stock_market_was_open_today():
+    url = 'https://finance.yahoo.com/quote/MSFT/history?p=MSFT'
+    numbers = pd.read_html(url)
+    last_day_open = numbers[0]["Date"][0]
+
+    new_york_timezone = timezone("US/Eastern")
+    the_time = datetime.now(new_york_timezone)
+    current_date = the_time.strftime('%b %d, %Y')
+
+    if current_date == last_day_open:
+        return True
+    return False
+
+
+
 
 
 
@@ -266,29 +280,24 @@ while True:
 
 
 
-
     # Wait for stock market to close
     wait_for_stock_market_close()
 
-    # Check how the stocks went
-    print("Checking how the stock market went today...\n")
-    y = np.zeros([1, len(company_tickers)])
-    for ticker in company_tickers:
-        y[0, company_tickers.index(ticker)] = get_daily_result(ticker)
 
-    # Check if the stock market was actually open today
-    stock_market_was_open_today = False
-    for n in range(len(y)):
-        if y[0, n] != 0:
-            stock_market_was_open_today = True
+    # Only saves the data if the stock market was actually open
+    if stock_market_was_open_today():
+        # Check how the stocks went
+        print("Checking how the stock market went today...\n")
+        y = np.zeros([1, len(company_tickers)])
+        for ticker in company_tickers:
+            y[0, company_tickers.index(ticker)] = get_daily_result(ticker)
 
-    # Save the data
-    if stock_market_was_open_today:
         print("Saving data...\n")
+
         # Add the labels
         features = np.hstack((features, y.T))
 
-        # Save the features
+        # Save data
         try:
             data = np.loadtxt("Data/main_data_file.txt")
             data = np.vstack((data, features))

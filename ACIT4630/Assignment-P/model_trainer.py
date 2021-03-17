@@ -4,6 +4,8 @@ from tensorflow.keras.layers import Dense, Dropout, LSTM#, CuDNNLSTM
 
 import numpy as np
 
+
+# Import data
 data = np.loadtxt("Data/main_data_file.txt")
 
 x = data[:, :-1]
