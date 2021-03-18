@@ -303,10 +303,10 @@ while True:
             # Has the shape "number of companies" x "number of features"
             features[company_tickers.index(ticker), :] = feature_line
         except:
-            print("Could not gather financial data on", ticker)
+            print("Could not gather financial data on", ticker, "\n")
             failed_readings.append(ticker)
 
-    print("")
+
 
 
 
@@ -325,7 +325,7 @@ while True:
             try:
                 y[0, company_tickers.index(ticker)] = get_daily_result(ticker)
             except:
-                print("Could not gather daily result on", ticker)
+                print("Could not gather daily result on", ticker, "\n")
                 failed_readings.append(ticker)
 
         # Add the labels
@@ -347,7 +347,7 @@ while True:
 
         contents = np.loadtxt("Data/main_data_file.txt")
 
-        print("We now have", np.shape(contents)[0], "data samples")
+        print("We now have", np.shape(contents)[0], "data samples\n")
 
     else:
         print("Stock market was not open today\nNo data recorded\n")

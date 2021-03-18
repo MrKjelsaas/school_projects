@@ -3,6 +3,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM#, CuDNNLSTM
 
 import numpy as np
+import time
+
 
 
 # Import data
@@ -13,7 +15,9 @@ y = data[:, -1]
 
 print(np.shape(data))
 
-
+for n in range(50):
+    print(y[n])
+    time.sleep(0.5)
 
 
 
