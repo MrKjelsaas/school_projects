@@ -15,8 +15,8 @@ y = data[:, -1]
 
 print(np.shape(data))
 
-for n in range(50):
-    print(y[n])
+for n in range(1, 51):
+    print(y[-n])
     time.sleep(0.5)
 
 

@@ -243,6 +243,8 @@ for n in range(len(numbers[0].index)):
 company_tickers[company_tickers.index("BF.B")] = "BF-B"
 company_sectors["BF-B"] = company_sectors.pop("BF.B")
 
+company_tickers[company_tickers.index("BRK.B")] = "BRK-B"
+company_sectors["BRK-B"] = company_sectors.pop("BRK.B")
 
 
 # Make bag of words
