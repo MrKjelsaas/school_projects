@@ -11,6 +11,7 @@ from pytz import timezone
 
 
 
+connection_attempts = 5
 
 
 
@@ -34,27 +35,30 @@ financial_features_names = ["Enterprise Value",
                             "Total Cash",
                             "Total Debt",
                             "Total Debt/Equity",
-                            "Operating Cash Flow"]
+                            "Operating Cash Flow"
+                            ]
+
 financial_websites = ["https://www.forbes.com/",
                       "https://www.marketwatch.com/",
-                      "https://www.wsj.com/",
-                      "https://bloomberg.com/",
+                      "https://www.wsj.com/news/economy",
+                      #"https://bloomberg.com/",
                       "https://www.reuters.com/",
                       "https://finance.yahoo.com/",
-                      "https://www.investopedia.com/",
+                      #"https://www.investopedia.com/",
                       "https://money.cnn.com/",
                       "https://cnbc.com/",
                       "https://ibtimes.com/",
-                      "https://seekingalpha.com/",
+                      #"https://seekingalpha.com/",
                       "https://fortune.com/",
                       "https://economist.com/",
                       "https://ft.com/",
-                      "https://morningstar.com/",
+                      "https://www.morningstar.com/news/",
                       "https://thestreet.com/",
-                      "https://nasdaq.com/",
+                      #"https://nasdaq.com/",
                       "https://moneymorning.com/",
                       "https://business-standard.com/",
-                      "https://kiplinger.com/"]
+                      "https://kiplinger.com/"
+                      ]
 
 
 
@@ -117,6 +121,31 @@ def fix_number_format(x):
             elif x[-1] == 'T':
                 y *= 1e12
             return y
+
+
+
+def get_news_sentiments():
+    sentiment_results = np.zeros(0)
+    for url in financial_websites:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        text = soup.get_text()
+        text = text.lower()
+
+        positive_words_occurence = 0
+        negative_words_occurence = 0
+        for n in range(len(positive_words_list)):
+            positive_words_occurence += len(re.findall(positive_words_list[n], text))
+        for n in range(len(negative_words_list)):
+            negative_words_occurence += len(re.findall(negative_words_list[n], text))
+        sentiment_results = np.append(sentiment_results, [positive_words_occurence, negative_words_occurence])
+
+        time.sleep(1)
+
+    return sentiment_results
+
+
+
 
 
 
@@ -202,17 +231,21 @@ def get_daily_result(ticker):
 
 
 def stock_market_was_open_today():
-    url = 'https://finance.yahoo.com/quote/MSFT/history?p=MSFT'
-    numbers = pd.read_html(url)
-    last_day_open = numbers[0]["Date"][0]
+    try:
+        url = 'https://finance.yahoo.com/quote/MSFT/history?p=MSFT'
+        numbers = pd.read_html(url)
+        last_day_open = numbers[0]["Date"][0]
 
-    new_york_timezone = timezone("US/Eastern")
-    the_time = datetime.now(new_york_timezone)
-    current_date = the_time.strftime('%b %d, %Y')
+        new_york_timezone = timezone("US/Eastern")
+        the_time = datetime.now(new_york_timezone)
+        current_date = the_time.strftime('%b %d, %Y')
 
-    if current_date == last_day_open:
-        return True
-    return False
+        if current_date == last_day_open:
+            return True
+        return False
+    except: # If we don't know if the stock market was open, we assume it was closed
+        print("Could not determine whether stock market was open today\n")
+        return False
 
 
 
@@ -248,14 +281,16 @@ company_sectors["BRK-B"] = company_sectors.pop("BRK.B")
 
 
 # Make bag of words
-bag_of_words = []
+positive_words_list = []
+negative_words_list = []
+#bag_of_words = []
 with open("Data/positive_words_en.txt", "r") as file:
     for line in file:
-        bag_of_words.append(line[:-1])
+        positive_words_list.append(line[:-1])
 
 with open("Data/negative_words_en.txt", "r") as file:
     for line in file:
-        bag_of_words.append(line[:-1])
+        negative_words_list.append(line[:-1])
 
 
 
@@ -271,46 +306,44 @@ MAIN LOOP
 """
 
 while True:
+
     # Wait for stock market to open
     wait_for_stock_market_open()
 
-    # Count occurences on the websites
+    # Collect news sentiment data
     print("Reading today's headlines...\n")
-    bag_of_words_occurences = np.zeros([len(bag_of_words)])
-    for url in financial_websites:
-        try:
-            response = requests.get(url)
-            soup = BeautifulSoup(response.text, 'html.parser')
-            text = soup.get_text()
+    daily_sentiment = get_news_sentiments()
 
-            for n in range(len(bag_of_words)):
-                bag_of_words_occurences[n] += len(re.findall(bag_of_words[n], text))
-        except:
-            pass
-
-
-
-    features = np.zeros([len(company_tickers), len(financial_features_names) + len(bag_of_words) + len(sector_numbers)])
+    # Get financial data
+    features = np.zeros([len(company_tickers), len(financial_features_names) + len(sector_numbers) + len(daily_sentiment)])
     failed_readings = []
     print("Gathering financial data...\n")
     for ticker in company_tickers:
-        try:
-            # Collect financial data
-            company_financial_data = get_financial_data(ticker)
+        successful_reading = False
+        for n in range(connection_attempts):
+            try:
+                # Collect financial data
+                company_financial_data = get_financial_data(ticker)
+                company_financial_data = company_financial_data[np.logical_not(np.isnan(company_financial_data))]
 
-            # Append the word features to the financial features
-            feature_line = np.append(company_financial_data, bag_of_words_occurences) # A single data sample
+                # Append the word features to the financial features
+                feature_line = np.append(company_financial_data, daily_sentiment) # A single data sample
 
-            # The features collected for this day
-            # Has the shape "number of companies" x "number of features"
-            features[company_tickers.index(ticker), :] = feature_line
-        except:
+                # The features collected for this day
+                # Has the shape "number of companies" x "number of features"
+                features[company_tickers.index(ticker), :] = feature_line
+                successful_reading = True
+                break
+            except:
+                time.sleep(1)
+
+        if not successful_reading:
             print("Could not gather financial data on", ticker, "\n")
             failed_readings.append(ticker)
 
 
-
-
+    print(feature_line)
+    print(features)
 
     # Wait for stock market to close
     wait_for_stock_market_close()
@@ -324,11 +357,19 @@ while True:
         y = np.zeros([1, len(company_tickers)])
 
         for ticker in company_tickers:
-            try:
-                y[0, company_tickers.index(ticker)] = get_daily_result(ticker)
-            except:
+            successful_reading = False
+            for n in range(connection_attempts):
+                try:
+                    y[0, company_tickers.index(ticker)] = get_daily_result(ticker)
+                    successful_reading = True
+                    break
+                except:
+                    time.sleep(1)
+
+            if not successful_reading:
                 print("Could not gather daily result on", ticker, "\n")
                 failed_readings.append(ticker)
+
 
         # Add the labels
         features = np.hstack((features, y.T))
