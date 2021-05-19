@@ -1,0 +1,29 @@
+Preparation:
+- Install the following python libraries through pip:
+ - numpy
+ - pandas
+ - pandas_datareader
+ - yfinance
+ - simfin
+
+- Create a folder named 'Data' in the working directory
+
+- Create a folder named 'Datasets' in the newly created 'Data' folder
+
+- Follow this link:
+https://www.kaggle.com/salmaragheb/sp-500-gspc
+and place the unzipped file in the 'Data' folder
+
+- Follow this link:
+https://finance.yahoo.com/quote/%5EVIX/history?period1=1262304000&period2=1577836800&interval=1d&filter=history&frequency=1d&includeAdjustedClose=true
+press the "Download" button, and place the downloaded file in the 'Data' folder
+
+
+
+Note:
+Occasionally, this script fails because of a bug in the yfinance library.
+This happens maybe 1/5 times.
+Just try running the script again.
+
+Also, this script takes like 20 minutes to run, so grab a coffee.
+

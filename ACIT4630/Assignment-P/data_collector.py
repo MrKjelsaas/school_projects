@@ -1,278 +1,30 @@
 import time
 import numpy as np
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
-import re
-from datetime import datetime
-from pytz import timezone
+from pandas_datareader import data as pdr
+import yfinance as yf
+yf.pdr_override()
+import simfin as sf
+from simfin.names import *
+import pickle
 
 
 
 
-
-connection_attempts = 5
-
-
-
-
-
-financial_features_names = ["Enterprise Value",
-                            "Trailing P/E",
-                            "Price/Sales",
-                            "Price/Book",
-                            "Enterprise Value/Revenue",
-                            "Enterprise Value/EBITDA",
-                            "Beta",
-                            "Trailing Annual Dividend Yield",
-                            "Profit Margin",
-                            "Operating Margin",
-                            "Return on Assets",
-                            "Return on Equity",
-                            "Revenue",
-                            "Gross Profit",
-                            "EBITDA",
-                            "Total Cash",
-                            "Total Debt",
-                            "Total Debt/Equity",
-                            "Operating Cash Flow"
-                            ]
-
-financial_websites = ["https://www.forbes.com/",
-                      "https://www.marketwatch.com/",
-                      "https://www.wsj.com/news/economy",
-                      #"https://bloomberg.com/",
-                      "https://www.reuters.com/",
-                      "https://finance.yahoo.com/",
-                      #"https://www.investopedia.com/",
-                      "https://money.cnn.com/",
-                      "https://cnbc.com/",
-                      "https://ibtimes.com/",
-                      #"https://seekingalpha.com/",
-                      "https://fortune.com/",
-                      "https://economist.com/",
-                      "https://ft.com/",
-                      "https://www.morningstar.com/news/",
-                      "https://thestreet.com/",
-                      #"https://nasdaq.com/",
-                      "https://moneymorning.com/",
-                      "https://business-standard.com/",
-                      "https://kiplinger.com/"
-                      ]
-
-
-
-def wait_for_stock_market_open():
-    # NYSE opens at 09:30 in the morning
-    print("Waiting for the stock market to open...\n")
-    new_york_timezone = timezone("US/Eastern")
-    the_time = datetime.now(new_york_timezone)
-    current_hour = float(the_time.strftime('%H'))
-    current_minute = float(the_time.strftime('%M'))
-
-
-    the_time = datetime.now(new_york_timezone)
-    current_hour = float(the_time.strftime('%H'))
-
-    while current_hour >= 9:
-        time.sleep(60)
-        the_time = datetime.now(new_york_timezone)
-        current_hour = float(the_time.strftime('%H'))
-
-    while current_hour < 9:
-        time.sleep(60)
-        the_time = datetime.now(new_york_timezone)
-        current_hour = float(the_time.strftime('%H'))
-
-    return
-
-
-
-def wait_for_stock_market_close():
-    # NYSE closes at 16:00 in the afternoon
-    print("Waiting for the stock market to close...\n")
-    new_york_timezone = timezone("US/Eastern")
-    the_time = datetime.now(new_york_timezone)
-    current_hour = float(the_time.strftime('%H'))
-
-    # Waits for the (american) stock market to close
-    while current_hour < 17:
-        time.sleep(60)
-        the_time = datetime.now(new_york_timezone)
-        current_hour = float(the_time.strftime('%H'))
-
-    return
-
-
-
-def fix_number_format(x):
-    try:
-        return float(x)
-    except ValueError:
-        x = x.replace(',', '')
-        if x[-1] == '%':
-            return x[:-1]
-        else:
-            y = float(x[:-1])
-            if x[-1] == 'M':
-                y *= 1e6
-            elif x[-1] == 'B':
-                y *= 1e9
-            elif x[-1] == 'T':
-                y *= 1e12
-            return y
-
-
-
-def get_news_sentiments():
-    sentiment_results = np.zeros(0)
-    for url in financial_websites:
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        text = soup.get_text()
-        text = text.lower()
-
-        positive_words_occurence = 0
-        negative_words_occurence = 0
-        for n in range(len(positive_words_list)):
-            positive_words_occurence += len(re.findall(positive_words_list[n], text))
-        for n in range(len(negative_words_list)):
-            negative_words_occurence += len(re.findall(negative_words_list[n], text))
-        sentiment_results = np.append(sentiment_results, [positive_words_occurence, negative_words_occurence])
-
-        time.sleep(1)
-
-    return sentiment_results
-
-
-
-
-
-
-def get_financial_data(ticker):
-    financial_data = np.zeros(len(financial_features_names) + len(sector_numbers))
-    url = 'https://finance.yahoo.com/quote/' + ticker + '/key-statistics?p=' + ticker
-    numbers = pd.read_html(url)
-
-    # Eterprise Value
-    financial_data[0] = fix_number_format(numbers[0][1][1])
-
-    # Trailing P/E
-    financial_data[1] = fix_number_format(numbers[0][1][2])
-
-    # Price/Sales
-    financial_data[2] = fix_number_format(numbers[0][1][5])
-
-    # Price/Book
-    financial_data[3] = fix_number_format(numbers[0][1][6])
-
-    # Enterprise Value/Revenue
-    financial_data[4] = fix_number_format(numbers[0][1][7])
-
-    # Enterprise Value/EBITDA
-    financial_data[5] = fix_number_format(numbers[0][1][8])
-
-    # Beta
-    financial_data[6] = fix_number_format(numbers[1][1][0])
-
-    # Trailing Annual Dividend Yield
-    financial_data[7] = fix_number_format(numbers[1][1][3])
-
-    # Profit Margin
-    financial_data[8] = fix_number_format(numbers[5][1][0])
-
-    # Operating Margin
-    financial_data[9] = fix_number_format(numbers[5][1][1])
-
-    # Return on Assets
-    financial_data[10] = fix_number_format(numbers[6][1][0])
-
-    # Return on Equity
-    financial_data[11] = fix_number_format(numbers[6][1][1])
-
-    # Revenue
-    financial_data[12] = fix_number_format(numbers[7][1][0])
-
-    # Gross Profit
-    financial_data[13] = fix_number_format(numbers[7][1][3])
-
-    # EBITDA
-    financial_data[14] = fix_number_format(numbers[7][1][4])
-
-    # Total Cash
-    financial_data[15] = fix_number_format(numbers[8][1][0])
-
-    # Total Debt
-    financial_data[16] = fix_number_format(numbers[8][1][2])
-
-    # Total Debt/Equity
-    financial_data[17] = fix_number_format(numbers[8][1][3])
-
-    # Operating Cash Flow
-    financial_data[18] = fix_number_format(numbers[9][1][0])
-
-    # Sector
-    financial_data[19 + sector_numbers[company_sectors[ticker]]] = 1
-
-    return financial_data
-
-
-
-def get_daily_result(ticker):
-    url = 'https://finance.yahoo.com/quote/' + ticker + '/history?p=' + ticker
-    numbers = pd.read_html(url)
-    open = numbers[0]["Open"][0]
-    close = numbers[0]["Adj Close**"][0]
-
-    daily_result = float(close) / float(open)
-    daily_result -= 1
-    return daily_result
-
-
-
-def stock_market_was_open_today():
-    try:
-        url = 'https://finance.yahoo.com/quote/MSFT/history?p=MSFT'
-        numbers = pd.read_html(url)
-        last_day_open = numbers[0]["Date"][0]
-
-        new_york_timezone = timezone("US/Eastern")
-        the_time = datetime.now(new_york_timezone)
-        current_date = the_time.strftime('%b %d, %Y')
-
-        if current_date == last_day_open:
-            return True
-        return False
-    except: # If we don't know if the stock market was open, we assume it was closed
-        print("Could not determine whether stock market was open today\n")
-        return False
-
-
-
-
-
-
-
-
-
-
-"""
-SETUP
-"""
 
 # Gather a list of S&P500 companies
-numbers = pd.read_html("https://en.m.wikipedia.org/wiki/List_of_S%26P_500_companies#S&P_500_component_stocks")
+sector_numbers = {} # Sector-number for one-hot encoding 'Information Technology': 2,
+company_tickers = [] # List of company tickers 'MSFT'
+company_sectors = {} # Contains which sector each company belongs to 'MSFT': 'Information Technology',
 
-sector_numbers = {}
-company_tickers = []
-company_sectors = {}
+numbers = pd.read_html("https://en.m.wikipedia.org/wiki/List_of_S%26P_500_companies#S&P_500_component_stocks")
 for n in range(len(numbers[0].index)):
     company_tickers.append(numbers[0]["Symbol"][n])
     if numbers[0]["GICS Sector"][n] not in sector_numbers.keys():
         sector_numbers[numbers[0]["GICS Sector"][n]] = len(sector_numbers)
     company_sectors[numbers[0]["Symbol"][n]] = numbers[0]["GICS Sector"][n]
 
-# This one is wrong on Wikipeda
+# These ones are wrong on Wikipeda
 company_tickers[company_tickers.index("BF.B")] = "BF-B"
 company_sectors["BF-B"] = company_sectors.pop("BF.B")
 
@@ -280,117 +32,154 @@ company_tickers[company_tickers.index("BRK.B")] = "BRK-B"
 company_sectors["BRK-B"] = company_sectors.pop("BRK.B")
 
 
-# Make bag of words
-positive_words_list = []
-negative_words_list = []
-#bag_of_words = []
-with open("Data/positive_words_en.txt", "r") as file:
-    for line in file:
-        positive_words_list.append(line[:-1])
-
-with open("Data/negative_words_en.txt", "r") as file:
-    for line in file:
-        negative_words_list.append(line[:-1])
 
 
 
 
 
+# Get fundamental data on companies
+sf.set_api_key('free')
+sf.set_data_dir('~/simfin_data/')
+
+successful_companies = [] # List of tickers that have the data we need
+financial_data = sf.load(dataset='income', variant='annual', market='us', index=['Ticker'])
+
+for ticker in company_tickers:
+    try:
+        df = financial_data.loc[ticker][-10:][['Revenue', 'Net Income', 'Gross Profit', 'Operating Expenses', 'Fiscal Year']]
+        if df['Fiscal Year'][0] == 2010:
+            successful_companies.append(ticker)
+    except:
+        continue
+
+#print("sf", len(successful_companies)) # 376
 
 
 
 
 
-"""
-MAIN LOOP
-"""
 
-while True:
+# Get historical data for all companies
+new_successful_companies = []
+for ticker in successful_companies:
+    try:
+        stock_info = pdr.get_data_yahoo(ticker, start="2010-01-04", end="2020-01-01") #yf.Ticker(ticker)
+        new_successful_companies.append(ticker)
+    except:
+        continue
 
-    # Wait for stock market to open
-    wait_for_stock_market_open()
-
-    # Collect news sentiment data
-    print("Reading today's headlines...\n")
-    daily_sentiment = get_news_sentiments()
-
-    # Get financial data
-    features = np.zeros([len(company_tickers), len(financial_features_names) + len(sector_numbers) + len(daily_sentiment)])
-    failed_readings = []
-    print("Gathering financial data...\n")
-    for ticker in company_tickers:
-        successful_reading = False
-        for n in range(connection_attempts):
-            try:
-                # Collect financial data
-                company_financial_data = get_financial_data(ticker)
-                company_financial_data = company_financial_data[np.logical_not(np.isnan(company_financial_data))]
-
-                # Append the word features to the financial features
-                feature_line = np.append(company_financial_data, daily_sentiment) # A single data sample
-
-                # The features collected for this day
-                # Has the shape "number of companies" x "number of features"
-                features[company_tickers.index(ticker), :] = feature_line
-                successful_reading = True
-                break
-            except:
-                time.sleep(1)
-
-        if not successful_reading:
-            print("Could not gather financial data on", ticker, "\n")
-            failed_readings.append(ticker)
+successful_companies = new_successful_companies.copy()
+#print("yf", len(successful_companies)) # 376
 
 
-    print(feature_line)
-    print(features)
+# A test run to double check it valid data for the companies exist
+x = np.zeros((len(successful_companies), 2516, 6))
+#y = np.zeros((len(successful_companies), 2516))
 
-    # Wait for stock market to close
-    wait_for_stock_market_close()
+new_successful_companies = []
+for n in range(len(successful_companies)):
+    stock_info = pdr.get_data_yahoo(successful_companies[n], start="2010-01-04", end="2020-01-01") #yf.Ticker(ticker)
+    stock_info = stock_info.to_numpy()
+    if np.shape(stock_info)[0] == 2516:
+        if np.shape(stock_info)[1] == 6:
+            new_successful_companies.append(successful_companies[n])
+
+successful_companies = new_successful_companies.copy()
 
 
 
-    # Only saves the data if the stock market was actually open
-    if stock_market_was_open_today():
-        # Check how the stocks went
-        print("Checking how the stock market went today...\n")
-        y = np.zeros([1, len(company_tickers)])
 
-        for ticker in company_tickers:
-            successful_reading = False
-            for n in range(connection_attempts):
-                try:
-                    y[0, company_tickers.index(ticker)] = get_daily_result(ticker)
-                    successful_reading = True
-                    break
-                except:
-                    time.sleep(1)
+x = np.zeros((len(successful_companies), 2516, 6))
+#y = np.zeros((len(successful_companies), 2516))
+#print(np.shape(x)) # 345, 2516, 6
 
-            if not successful_reading:
-                print("Could not gather daily result on", ticker, "\n")
-                failed_readings.append(ticker)
+for n in range(len(successful_companies)):
+    stock_info = pdr.get_data_yahoo(successful_companies[n], start="2010-01-04", end="2020-01-01") #yf.Ticker(ticker)
+    stock_info = stock_info.to_numpy()
+    x[n, :, :] = stock_info
+
+#print(np.shape(x)) # 345, 2516, 6
+
+pickle.dump(x, open("Data/Datasets/all_companies_historical_data.pkl", "wb"))
+pickle.dump(successful_companies, open("Data/Datasets/list_of_companies.pkl", "wb"))
 
 
-        # Add the labels
-        features = np.hstack((features, y.T))
 
-        # Remove bad data
-        for n in range(len(failed_readings)):
-            failed_readings[n] = company_tickers.index(failed_readings[n])
-        features = np.delete(features, (failed_readings), axis=0)
 
-        # Save data
-        print("Saving data...\n")
-        try:
-            data = np.loadtxt("Data/main_data_file.txt")
-            data = np.vstack((data, features))
-            np.savetxt("Data/main_data_file.txt", data)
-        except:
-            np.savetxt("Data/main_data_file.txt", features)
 
-        contents = np.loadtxt("Data/main_data_file.txt")
 
-        print("We now have", np.shape(contents)[0], "data samples\n")
 
-    else:
-        print("Stock market was not open today\nNo data recorded\n")
+
+# Get financial data
+list_of_companies = successful_companies.copy()
+all_companies_financial_data = np.zeros((len(list_of_companies), 2516, 4))
+
+sf.set_api_key('free')
+sf.set_data_dir('~/simfin_data/')
+financial_data = sf.load(dataset='income', variant='annual', market='us', index=['Ticker'])
+for n in range(len(list_of_companies)):
+    company_financial_data = financial_data.loc[list_of_companies[n]][-10:][['Revenue', 'Net Income', 'Gross Profit', 'Operating Expenses', 'Fiscal Year']]
+    company_financial_data = company_financial_data.to_numpy()
+    company_financial_data = company_financial_data[:, :4]
+
+    stock_info = pdr.get_data_yahoo(list_of_companies[n], start="2010-01-04", end="2020-01-01")
+
+    days_counted = 0
+    for year in range(2010, 2020):
+        yearly_historical_data = stock_info.loc[str(year) + '0101':str(year) + '1231']
+        yearly_historical_data = yearly_historical_data.to_numpy()
+
+        all_companies_financial_data[n, days_counted:days_counted+np.shape(yearly_historical_data)[0], :] = company_financial_data[year-2010, :]
+        days_counted += np.shape(yearly_historical_data)[0]
+
+pickle.dump(all_companies_financial_data, open("Data/Datasets/all_companies_financial_data.pkl", "wb"))
+
+
+
+
+
+# Import VIX historical data
+vix_data = pd.read_csv('Data/^VIX.csv')
+vix_data = vix_data.to_numpy()
+vix_data = vix_data[:, 1:-1]
+np.savetxt('Data/Datasets/vix_data.csv', vix_data)
+
+
+# Import S&P500 historical data
+SP500_data = pd.read_csv(r'Data/SP 500 GSPC.csv')
+SP500_data = SP500_data.to_numpy()
+SP500_data = SP500_data[20593:23109, 1:]
+np.savetxt('Data/Datasets/SP500_data.csv', SP500_data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Collect index data
+vix_data = pd.read_csv('Data/Datasets/vix_data.csv')
+SP500_data = pd.read_csv('Data/Datasets/SP500_data.csv')
+
+# Load company historical data
+all_companies_historical_data = pickle.load(open("Data/Datasets/all_companies_historical_data.pkl", "rb"))
+all_companies_financial_data = pickle.load(open("Data/Datasets/all_companies_financial_data.pkl", "rb"))
+list_of_companies = pickle.load(open("Data/Datasets/list_of_companies.pkl", "rb"))
+
+
+
+
+# Placeholder
