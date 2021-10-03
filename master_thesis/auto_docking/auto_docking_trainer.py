@@ -30,7 +30,7 @@ class DeepQNetwork(nn.Module):
         self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
-        self.device = T.device('coda:0' if T.cuda.is_available() else 'cpu')
+        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
     def forward(self, state):
@@ -41,7 +41,7 @@ class DeepQNetwork(nn.Module):
         return actions
 
 class Agent():
-    def __init__(self, gamma, epsilon, lr, input_dims, batch_size, n_actions, max_mem_size=100_000, eps_end=0.01, eps_dec=5e-4):
+    def __init__(self, gamma, epsilon, lr, input_dims, batch_size, n_actions, max_mem_size=100_000, eps_end=0.001, eps_dec=0.0001):
         self.gamma = gamma
         self.epsilon = epsilon
         self.eps_min = eps_end
@@ -52,7 +52,7 @@ class Agent():
         self.batch_size = batch_size
         self.mem_cntr = 0
 
-        self.Q_eval = DeepQNetwork(self.lr, n_actions=n_actions, input_dims=input_dims, fc1_dims=256, fc2_dims=256)
+        self.Q_eval = DeepQNetwork(self.lr, n_actions=n_actions, input_dims=input_dims, fc1_dims=512, fc2_dims=512)
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
@@ -279,20 +279,20 @@ def set_vehicle_thrusters(vehicle="otter", method="random", mover = None, inputs
         elif method == "dq_agent":
             action = mover.choose_action(inputs)
             if action == 0: # Go forward
-                thruster_configuration[0] = 30
-                thruster_configuration[1] = 30
+                thruster_configuration[0] = 50
+                thruster_configuration[1] = 50
             elif action == 1: # Set to zero
                 thruster_configuration[0] = 0
                 thruster_configuration[1] = 0
             elif action == 2: # Go backwards
-                thruster_configuration[0] = -30
-                thruster_configuration[1] = -30
+                thruster_configuration[0] = -50
+                thruster_configuration[1] = -50
             elif action == 3: # Turn left
-                thruster_configuration[0] = -30
-                thruster_configuration[1] = 30
+                thruster_configuration[0] = -50
+                thruster_configuration[1] = 50
             elif action == 4: # Turn right
-                thruster_configuration[0] = 30
-                thruster_configuration[1] = -30
+                thruster_configuration[0] = 50
+                thruster_configuration[1] = -50
 
     return action, thruster_configuration
 
@@ -301,14 +301,14 @@ def set_vehicle_thrusters(vehicle="otter", method="random", mover = None, inputs
 def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_of_steps=9010, visualize=True, print_information=True, starting_position="random", movement_model=None):
     # DQL parameters
     action_taken = None
-    observation = np.zeros(17, dtype=np.float32)
-    next_observation = np.zeros(17, dtype=np.float32)
+    observation = np.zeros(11, dtype=np.float32)
+    next_observation = np.zeros(11, dtype=np.float32)
     reward = 0
     done = False
     # This list will be filled during simulation
     actions_taken = np.zeros(1, dtype=np.int32)
-    vehicle_observations = np.zeros([1, 17], dtype=np.float32)
-    vehicle_next_observations = np.zeros([1, 17], dtype=np.float32)
+    vehicle_observations = np.zeros([1, 11], dtype=np.float32)
+    vehicle_next_observations = np.zeros([1, 11], dtype=np.float32)
     rewards = np.zeros(1, dtype=np.float32)
     dones = np.zeros(1, dtype=np.float32)
 
@@ -337,8 +337,6 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
     u_actual = vehicle.u_actual # Actual inputs, defined by otter class (that's what Fossen wrote)
     u_control = np.array([0, 0], float) # Step input on thrusters. Max +- 100
     previous_vehicle_surge = 0 # Used for calculating acceleration
-    previous_vehicle_sway = 0 # Used for calculating acceleration
-    previous_vehicle_heave = 0 # Used for calculating acceleration
     previous_vehicle_yaw_velocity = 0 # Used for calculating acceleration
 
     # The simulation loop
@@ -369,50 +367,42 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
             vehicle_x_position = eta[1]
             vehicle_y_position = eta[0]
 
-            vehicle_yaw = eta[5]
+            vehicle_yaw = -eta[5]
             vehicle_surge = nu[0]
             vehicle_sway = nu[1]
             vehicle_heave = nu[2]
             vehicle_total_speed = np.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)
 
             vehicle_surge_acceleration = nu[0] - previous_vehicle_surge
-            vehicle_sway_acceleration = nu[1] - previous_vehicle_sway
-            vehicle_heave_acceleration = nu[2] - previous_vehicle_heave
-            vehicle_yaw_acceleration = eta[5] - previous_vehicle_yaw_velocity
+            vehicle_yaw_acceleration = -eta[5] - previous_vehicle_yaw_velocity
 
             distance_between_vehicle_and_dock = np.hypot(dock_position[0]-vehicle_x_position, dock_position[1]-vehicle_y_position)
-            angular_difference_between_vehicle_and_dock = dock_angle + vehicle_yaw
+            angular_difference_between_vehicle_and_dock = dock_angle - vehicle_yaw
             while angular_difference_between_vehicle_and_dock > np.pi:
                 angular_difference_between_vehicle_and_dock -= 2*np.pi
             while angular_difference_between_vehicle_and_dock <= -np.pi:
                 angular_difference_between_vehicle_and_dock += 2*np.pi
 
             # Collects the relevant data into a single array
-            observation = np.zeros(17, dtype=np.float32)
+            observation = np.zeros(11, dtype=np.float32)
             # All linear and angular velocities
             observation[0] = nu[0] # Vehicle surge
-            observation[1] = nu[1] # Vehicle sway
-            observation[2] = nu[2] # Vehicle heave
-            observation[3] = nu[3] # Vehicle roll velocity
-            observation[4] = nu[4] # Vehicle pitch velocity
-            observation[5] = nu[5] # Vehicle yaw velocity
+            observation[1] = nu[5] # Vehicle yaw velocity
             # Surge/sway/heave/yaw acceleration
-            observation[6] = vehicle_surge_acceleration # Surge acceleration
-            observation[7] = vehicle_sway_acceleration # Sway acceleration
-            observation[8] = vehicle_heave_acceleration # Heave acceleration
-            observation[9] = vehicle_yaw_acceleration # Yaw acceleration
+            observation[2] = vehicle_surge_acceleration # Surge acceleration
+            observation[3] = vehicle_yaw_acceleration # Yaw acceleration
             # Current heading
-            observation[10] = eta[5] # Vehicle yaw
+            observation[4] = -eta[5] # Vehicle yaw
             # Position difference
-            observation[11] = dock_position[0] - eta[1] # Difference in x-position (global frame)
-            observation[12] = dock_position[1] - eta[0] # Difference in y-position (global frame)
+            observation[5] = dock_position[0] - eta[1] # Difference in x-position (global frame)
+            observation[6] = dock_position[1] - eta[0] # Difference in y-position (global frame)
             # Distance to dock
-            observation[13] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
+            observation[7] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
             # Angle to dock
-            observation[14] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
+            observation[8] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
             # Current thruster configuration
-            observation[15] = u_control[0] # Left thruster
-            observation[16] = u_control[1] # Right thruster
+            observation[9] = u_control[0] # Left thruster
+            observation[10] = u_control[1] # Right thruster
 
             vehicle_observations = np.r_[vehicle_observations, [observation]]
 
@@ -427,59 +417,49 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
         vehicle_x_position = eta[1]
         vehicle_y_position = eta[0]
 
-        vehicle_yaw = eta[5]
+        vehicle_yaw = -eta[5]
         vehicle_surge = nu[0]
         vehicle_sway = nu[1]
         vehicle_heave = nu[2]
         vehicle_total_speed = np.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)
 
         vehicle_surge_acceleration = nu[0] - previous_vehicle_surge
-        vehicle_sway_acceleration = nu[1] - previous_vehicle_sway
-        vehicle_heave_acceleration = nu[2] - previous_vehicle_heave
-        vehicle_yaw_acceleration = eta[5] - previous_vehicle_yaw_velocity
+        vehicle_yaw_acceleration = -eta[5] - previous_vehicle_yaw_velocity
 
         distance_between_vehicle_and_dock = np.hypot(dock_position[0]-vehicle_x_position, dock_position[1]-vehicle_y_position)
-        angular_difference_between_vehicle_and_dock = dock_angle + vehicle_yaw
+        angular_difference_between_vehicle_and_dock = dock_angle - vehicle_yaw
         while angular_difference_between_vehicle_and_dock > np.pi:
             angular_difference_between_vehicle_and_dock -= 2*np.pi
         while angular_difference_between_vehicle_and_dock <= -np.pi:
             angular_difference_between_vehicle_and_dock += 2*np.pi
 
         # Collects the relevant data into a single array
-        next_observation = np.zeros(17, dtype=np.float32)
-        # All linear and angular velocities
+        next_observation = np.zeros(11, dtype=np.float32)
+        # Linear and angular velocity
         next_observation[0] = nu[0] # Vehicle surge
-        next_observation[1] = nu[1] # Vehicle sway
-        next_observation[2] = nu[2] # Vehicle heave
-        next_observation[3] = nu[3] # Vehicle roll velocity
-        next_observation[4] = nu[4] # Vehicle pitch velocity
-        next_observation[5] = nu[5] # Vehicle yaw velocity
-        # Surge/sway/heave/yaw acceleration
-        next_observation[6] = vehicle_surge_acceleration # Surge acceleration
-        next_observation[7] = vehicle_sway_acceleration # Sway acceleration
-        next_observation[8] = vehicle_heave_acceleration # Heave acceleration
-        next_observation[9] = vehicle_yaw_acceleration # Yaw acceleration
+        next_observation[1] = nu[5] # Vehicle yaw velocity
+        # Surge/yaw acceleration
+        next_observation[2] = vehicle_surge_acceleration # Surge acceleration
+        next_observation[3] = vehicle_yaw_acceleration # Yaw acceleration
         # Current heading
-        next_observation[10] = eta[5] # Vehicle yaw
+        next_observation[4] = -eta[5] # Vehicle yaw
         # Position difference
-        next_observation[11] = dock_position[0] - eta[1] # Difference in x-position (global frame)
-        next_observation[12] = dock_position[1] - eta[0] # Difference in y-position (global frame)
+        next_observation[5] = dock_position[0] - eta[1] # Difference in x-position (global frame)
+        next_observation[6] = dock_position[1] - eta[0] # Difference in y-position (global frame)
         # Distance to dock
-        next_observation[13] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
+        next_observation[7] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
         # Angle to dock
-        next_observation[14] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
+        next_observation[8] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
         # Current thruster configuration
-        next_observation[15] = u_control[0] # Left thruster
-        next_observation[16] = u_control[1] # Right thruster
+        next_observation[9] = u_control[0] # Left thruster
+        next_observation[10] = u_control[1] # Right thruster
 
         # Add the observation at this time step to the entire history
         vehicle_next_observations = np.r_[vehicle_next_observations, [next_observation]]
 
         # Used to calculate acceleration
         previous_vehicle_surge = nu[0]
-        previous_vehicle_sway = nu[1]
-        previous_vehicle_heave = nu[2]
-        previous_vehicle_yaw_velocity = eta[5]
+        previous_vehicle_yaw_velocity = -eta[5]
 
 
 
@@ -546,7 +526,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                 print("Reached time limit")
                 print("Ending simulation")
                 print("------------------------")
-            reward = (np.hypot(100, 100) - distance_between_vehicle_and_dock)/np.hypot(100, 100) + (np.pi - abs(angular_difference_between_vehicle_and_dock))/np.pi
+            reward = (np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5) + ((np.pi/2 - abs(angular_difference_between_vehicle_and_dock))/np.pi)
             done = True
             rewards = np.append(rewards, reward)
             dones = np.append(dones, done)
@@ -577,7 +557,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                 print("Vehicle crashed into the dock")
                 print("Ending simulation")
                 print("------------------------")
-            reward = -0.5*vehicle_total_speed**2
+            reward = -(0.5*vehicle_total_speed**2)
             done = True
             rewards = np.append(rewards, reward)
             dones = np.append(dones, done)
@@ -592,6 +572,10 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
     vehicle_next_observations = vehicle_next_observations[1:, :]
     rewards = rewards[1:]
     dones = dones[1:]
+
+    print("X:  ", np.round(eta[1], 2))
+    print("Y:  ", np.round(eta[0], 2))
+    print("Yaw:", np.round(-eta[5], 2))
 
     return actions_taken, vehicle_observations, vehicle_next_observations, rewards, dones
 
@@ -634,24 +618,23 @@ def mutate_network(network_topology, mutation_method="random"):
 
 
 # The number of times we will simulate the vehicle
-number_of_simulations = 10000
+number_of_simulations = 100_000
 
 # Create the network
-dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.003, input_dims=[17], batch_size=64, n_actions=5)
+dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.01, input_dims=[11], batch_size=32, n_actions=5)
 
 # Beginning of the simulations
 for simulation_number in range(number_of_simulations):
     print("Starting simulation:", simulation_number + 1)
 
     # The actual simulation
-    simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(sample_time=0.1, number_of_steps=1000, visualize=False, print_information=False, movement_model=dq_agent)
+    simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="fixed", sample_time=0.1, number_of_steps=600, visualize=False, print_information=False, movement_model=dq_agent)
     """
-    if simulation_number % 100000 == 0:
-        simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(sample_time=0.1, number_of_steps=1000, visualize=True, print_information=True, movement_model=dq_agent)
+    if simulation_number % 1000 == 0:
+        simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="fixed", sample_time=0.1, number_of_steps=1000, visualize=True, print_information=True, movement_model=dq_agent)
     else:
-        simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(sample_time=0.1, number_of_steps=1000, visualize=False, print_information=False, movement_model=dq_agent)
+        simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="fixed", sample_time=0.1, number_of_steps=1000, visualize=False, print_information=False, movement_model=dq_agent)
     """
-
     # Displays the simulation reward
     print("")
     print("------------------------")
@@ -665,23 +648,31 @@ for simulation_number in range(number_of_simulations):
     # Create the memory
     final_reward = simulation_rewards[-1]
     for n in range(len(simulation_rewards)):
-        simulation_rewards[n] = final_reward*np.exp(-n/100)
+        simulation_rewards[n] = final_reward*0.99**n
     simulation_rewards = np.flipud(simulation_rewards)
+
 
     for n in range(len(simulation_actions_taken)):
         dq_agent.store_transition(simulation_vehicle_observations[n, :], simulation_actions_taken[n], simulation_rewards[n], simulation_vehicle_next_observations[n], simulation_dones[n])
 
     # Train the network
-    dq_agent.learn()
+    for n in range(600):
+        dq_agent.learn()
+
+    # Saves the network during training
+    T.save(dq_agent.Q_eval, "neural_network_models/trained_model.pt")
 
 
 
+# Save the network after training
+T.save(dq_agent.Q_eval, "neural_network_models/final_trained_model.pt")
 
-
-
-
-
-
+# Load a network for testing
+"""
+test_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.01, input_dims=[11], batch_size=32, n_actions=5)
+test_agent.Q_eval = T.load("neural_network_models/final_trained_model.pt")
+test_agent.Q_eval.eval()
+"""
 
 
 
