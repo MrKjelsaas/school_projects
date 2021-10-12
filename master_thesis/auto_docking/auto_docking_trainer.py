@@ -452,7 +452,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                     print("Reached time limit")
                     print("Ending simulation")
                     print("------------------------")
-                reward = (previous_distance_between_vehicle_and_dock - distance_between_vehicle_and_dock) + 10*(abs(previous_angular_difference_between_vehicle_and_dock) - abs(angular_difference_between_vehicle_and_dock))
+                reward = (previous_distance_between_vehicle_and_dock - distance_between_vehicle_and_dock) + 9*(abs(previous_angular_difference_between_vehicle_and_dock) - abs(angular_difference_between_vehicle_and_dock))
                 done = True
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -493,7 +493,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
 
 
             # Intermediate rewards
-            reward = (previous_distance_between_vehicle_and_dock - distance_between_vehicle_and_dock) + 10*(abs(previous_angular_difference_between_vehicle_and_dock) - abs(angular_difference_between_vehicle_and_dock))
+            reward = (previous_distance_between_vehicle_and_dock - distance_between_vehicle_and_dock) + 9*(abs(previous_angular_difference_between_vehicle_and_dock) - abs(angular_difference_between_vehicle_and_dock))
             previous_distance_between_vehicle_and_dock = distance_between_vehicle_and_dock
             previous_angular_difference_between_vehicle_and_dock = angular_difference_between_vehicle_and_dock
             rewards = np.append(rewards, reward)
