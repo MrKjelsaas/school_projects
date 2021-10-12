@@ -309,14 +309,14 @@ def set_vehicle_thrusters(vehicle="otter", method="random", mover=None, inputs=N
 def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_of_steps=9010, visualize=True, print_information=True, starting_position="random", movement_method="fixed", movement_model=None):
     # DQL parameters
     action_taken = None
-    observation = np.zeros(5, dtype=np.float32)
-    next_observation = np.zeros(5, dtype=np.float32)
+    observation = np.zeros(7, dtype=np.float32)
+    next_observation = np.zeros(7, dtype=np.float32)
     reward = 0
     done = 0
     # This list will be filled during simulation
     actions_taken = np.zeros(1, dtype=np.int32)
-    vehicle_observations = np.zeros([1, 5], dtype=np.float32)
-    vehicle_next_observations = np.zeros([1, 5], dtype=np.float32)
+    vehicle_observations = np.zeros([1, 7], dtype=np.float32)
+    vehicle_next_observations = np.zeros([1, 7], dtype=np.float32)
     rewards = np.zeros(1, dtype=np.float32)
     dones = np.zeros(1, dtype=np.float32)
 
@@ -338,7 +338,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
     # Gives the position and orientation of the dock
     if dock == "dummy_dock":
         dock_position = [27.5, -27.5]
-        dock_angle = np.deg2rad(225)
+        dock_angle = np.deg2rad(225-360)
 
     # Setting initial parameters
     nu = vehicle.nu # Velocity
@@ -364,16 +364,18 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                 angular_difference_between_vehicle_and_dock += 2*np.pi
 
             # Collects the relevant data into a single array
-            observation = np.zeros(5, dtype=np.float32)
-            # Current heading
-            observation[0] = -eta[5] # Vehicle yaw
+            observation = np.zeros(7, dtype=np.float32)
+            # X,Y-position and yaw
+            observation[0] = eta[1] # x-position (global frame)
+            observation[1] = eta[0] # y-position (global frame)
+            observation[2] = -eta[5] # yaw (global frame)
             # Position difference
-            observation[1] = dock_position[0] - eta[1] # Difference in x-position (global frame)
-            observation[2] = dock_position[1] - eta[0] # Difference in y-position (global frame)
+            observation[3] = dock_position[0] - eta[1] # Difference in x-position (global frame)
+            observation[4] = dock_position[1] - eta[0] # Difference in y-position (global frame)
             # Distance to dock
-            observation[3] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
+            observation[5] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
             # Angle to dock
-            observation[4] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
+            observation[6] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
 
             vehicle_observations = np.r_[vehicle_observations, [observation]]
 
@@ -405,16 +407,18 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                 angular_difference_between_vehicle_and_dock += 2*np.pi
 
             # Collects the relevant data into a single array
-            next_observation = np.zeros(5, dtype=np.float32)
-            # Current heading
-            next_observation[0] = -eta[5] # Vehicle yaw
+            next_observation = np.zeros(7, dtype=np.float32)
+            # X,Y-position and yaw
+            next_observation[0] = eta[1] # x-position (global frame)
+            next_observation[1] = eta[0] # y-position (global frame)
+            next_observation[2] = -eta[5] # yaw (global frame)
             # Position difference
-            next_observation[1] = dock_position[0] - eta[1] # Difference in x-position (global frame)
-            next_observation[2] = dock_position[1] - eta[0] # Difference in y-position (global frame)
+            next_observation[3] = dock_position[0] - eta[1] # Difference in x-position (global frame)
+            next_observation[4] = dock_position[1] - eta[0] # Difference in y-position (global frame)
             # Distance to dock
-            next_observation[3] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
+            next_observation[5] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
             # Angle to dock
-            next_observation[4] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
+            next_observation[6] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
 
             # Add the observation at this time step to the entire history
             vehicle_next_observations = np.r_[vehicle_next_observations, [next_observation]]
@@ -449,8 +453,8 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                     print("Reached time limit")
                     print("Ending simulation")
                     print("------------------------")
-                reward = (np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5) + ((np.pi - abs(angular_difference_between_vehicle_and_dock))/np.pi)
                 reward = (np.hypot(75, 75) - distance_between_vehicle_and_dock)/np.hypot(75, 75) + (np.pi - abs(angular_difference_between_vehicle_and_dock))/(np.pi)
+                reward = ((np.hypot(75, 75) - distance_between_vehicle_and_dock)/np.hypot(75, 75))**2 + ((np.pi - abs(angular_difference_between_vehicle_and_dock))/(np.pi))**2
                 done = True
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -489,8 +493,8 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                 break
 
             # Gives intermediate rewards
-            reward = (np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5) + (np.pi/2 - abs(angular_difference_between_vehicle_and_dock))/np.pi/2
             reward = (np.hypot(75, 75) - distance_between_vehicle_and_dock)/np.hypot(75, 75) + (np.pi - abs(angular_difference_between_vehicle_and_dock))/(np.pi)
+            reward = ((np.hypot(75, 75) - distance_between_vehicle_and_dock)/np.hypot(75, 75))**2 + ((np.pi - abs(angular_difference_between_vehicle_and_dock))/(np.pi))**2
             rewards = np.append(rewards, reward)
             dones = np.append(dones, done)
 
@@ -593,7 +597,7 @@ number_of_simulations = 10_000
 best_simulation_reward = -1
 
 # Create the network
-dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.001, input_dims=[5], batch_size=32, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=0.0001)
+dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.002, input_dims=[7], batch_size=64, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=0.0002)
 
 # Beginning of the simulations
 for simulation_number in range(number_of_simulations):
@@ -625,7 +629,6 @@ for simulation_number in range(number_of_simulations):
     T.save(dq_agent.Q_eval, "neural_network_models/trained_model.pt")
     if simulation_rewards[-1] > best_simulation_reward:
         best_simulation_reward = simulation_rewards[-1]
-        T.save(dq_agent.Q_eval, "neural_network_models/best_model.pt")
         print("\n---------")
         print("New best:")
         print(np.round(best_simulation_reward, 7))
