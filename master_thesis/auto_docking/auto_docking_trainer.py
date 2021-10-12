@@ -328,20 +328,18 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
         vehicle = otter()
 
     # Set initial position and attitude of vehicle
+    # x, y, z, roll, pitch, yaw (uses NED reference frame)
     eta = np.array([0, 0, 0, 0, 0, 0], float)
     if starting_position == "random":
         eta[0] = 20*np.random.rand() - 10
         eta[1] = 20*np.random.rand() - 10
         eta[5] = 2*np.pi*np.random.rand() - np.pi
-    """x, y, z, roll, pitch, yaw
-    Positive x axis is straight ahead
-    Positive y axis is towards starboard
-    Positive z axis is into the ocean"""
+
 
     # Gives the position and orientation of the dock
     if dock == "dummy_dock":
         dock_position = [27.5, -27.5]
-        dock_angle = np.deg2rad(-135)
+        dock_angle = np.deg2rad(225)
 
     # Setting initial parameters
     nu = vehicle.nu # Velocity
@@ -361,7 +359,6 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
         if t % 1 == 0: # We only evalute the DQL agent at certain intervals
             # Gather observation
             vehicle_yaw = -eta[5]
-            vehicle_total_speed = np.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)
 
             distance_between_vehicle_and_dock = np.hypot(dock_position[0]-eta[1], dock_position[1]-eta[0])
             angular_difference_between_vehicle_and_dock = smallest_signed_angle_between(vehicle_yaw, dock_angle)
@@ -400,7 +397,6 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
         if t % 1 == 0: # We only evalute the DQL agent at certain intervals
             # Gather relevant data
             vehicle_yaw = -eta[5]
-            vehicle_total_speed = np.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)
 
             distance_between_vehicle_and_dock = np.hypot(dock_position[0]-eta[1], dock_position[1]-eta[0])
             angular_difference_between_vehicle_and_dock = smallest_signed_angle_between(vehicle_yaw, dock_angle)
@@ -421,10 +417,6 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
 
             # Add the observation at this time step to the entire history
             vehicle_next_observations = np.r_[vehicle_next_observations, [next_observation]]
-
-            # Used to calculate acceleration
-            previous_vehicle_surge = nu[0]
-            previous_vehicle_yaw_velocity = -eta[5]
 
 
 
@@ -483,7 +475,6 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                     print("Vehicle crashed into the dock")
                     print("Ending simulation")
                     print("------------------------")
-                reward = -(0.5*vehicle_total_speed**2)
                 reward = -100
                 done = True
                 rewards = np.append(rewards, reward)
@@ -603,7 +594,7 @@ def mutate_network(network_topology, mutation_method="random"):
 
 
 # The number of times we will simulate the vehicle
-number_of_simulations = 10_000
+number_of_simulations = 25_000
 best_simulation_score = -np.inf
 
 # Create the network
@@ -615,13 +606,7 @@ for simulation_number in range(number_of_simulations):
 
     # The actual simulation
     # Note that number_of_steps must be 1 higher than an int of seconds (f.ex sample_time = 0.1, and number_of_steps = 601 for 60 seconds)
-    if simulation_number == 0:
-        simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="fixed", sample_time=0.1, number_of_steps=1801, visualize=False, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
-    else:
-        if simulation_number % 1000 == 0:
-            simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="fixed", sample_time=0.1, number_of_steps=1801, visualize=True, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
-        else:
-            simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="fixed", sample_time=0.1, number_of_steps=1801, visualize=False, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
+    simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="fixed", sample_time=0.1, number_of_steps=1801, visualize=False, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
 
     # Displays the simulation reward
     print("")
