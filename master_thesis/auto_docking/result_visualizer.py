@@ -1,0 +1,1 @@
+from auto_docking_trainer import simulate

@@ -81,3 +81,27 @@ def knots_to_meters_per_second(knots):
 
 def meters_per_second_to_knots(meters_per_second):
     return meters_per_second*3.6/1.852
+
+
+# Taken from https://en.wikipedia.org/wiki/Geographic_coordinate_system
+# Standard value is for OsloMet Oceanlab
+def distance_at_longitude(degrees, phi = 10.719278575838432):
+    phi = np.deg2rad(phi)
+    return degrees * (11412.84*np.cos(phi) - 93.5*np.cos(3*phi) + 0.118*np.cos(5*phi))
+
+
+
+# Taken from https://en.wikipedia.org/wiki/Geographic_coordinate_system
+# Standard value is for OsloMet Oceanlab
+def distance_at_latitude(degrees, phi = 59.90865634998943):
+    phi = np.deg2rad(phi)
+    return degrees * (111132.92 - 559.82*np.cos(2*phi) + 1.175*np.cos(4*phi) - 0.0023*np.cos(6*phi))
+
+
+
+# Returns distance in meters between two decimal coordinates
+def map_distance(start, end):
+    lat_distance = distance_at_latitude(end[0]-start[0], np.average([start[0], end[0]]))
+    lon_distance = distance_at_longitude(end[1]-start[1], np.average([start[1], end[1]]))
+    distance = np.hypot(lat_distance, lon_distance)
+    return distance
