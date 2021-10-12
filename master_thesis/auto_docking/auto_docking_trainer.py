@@ -358,9 +358,9 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
 
             distance_between_vehicle_and_dock = np.hypot(dock_position[0]-eta[1], dock_position[1]-eta[0])
             angular_difference_between_vehicle_and_dock = dock_angle - vehicle_yaw
-            while angular_difference_between_vehicle_and_dock > 2*np.pi:
+            while angular_difference_between_vehicle_and_dock > np.pi:
                 angular_difference_between_vehicle_and_dock -= 2*np.pi
-            while angular_difference_between_vehicle_and_dock <= 0:
+            while angular_difference_between_vehicle_and_dock <= -np.pi:
                 angular_difference_between_vehicle_and_dock += 2*np.pi
 
             # Collects the relevant data into a single array
@@ -399,9 +399,9 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
 
             distance_between_vehicle_and_dock = np.hypot(dock_position[0]-eta[1], dock_position[1]-eta[0])
             angular_difference_between_vehicle_and_dock = dock_angle - vehicle_yaw
-            while angular_difference_between_vehicle_and_dock > 2*np.pi:
+            while angular_difference_between_vehicle_and_dock > np.pi:
                 angular_difference_between_vehicle_and_dock -= 2*np.pi
-            while angular_difference_between_vehicle_and_dock <= 0:
+            while angular_difference_between_vehicle_and_dock <= -np.pi:
                 angular_difference_between_vehicle_and_dock += 2*np.pi
 
             # Collects the relevant data into a single array
@@ -449,8 +449,8 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                     print("Reached time limit")
                     print("Ending simulation")
                     print("------------------------")
-                reward = (np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5) + ((np.pi/2 - abs(angular_difference_between_vehicle_and_dock))/np.pi/2)
-                reward = (np.hypot(75, 75) - distance_between_vehicle_and_dock)/np.hypot(75, 75) + (2*np.pi - abs(angular_difference_between_vehicle_and_dock))/(2*np.pi)
+                reward = (np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5) + ((np.pi - abs(angular_difference_between_vehicle_and_dock))/np.pi)
+                reward = (np.hypot(75, 75) - distance_between_vehicle_and_dock)/np.hypot(75, 75) + (np.pi - abs(angular_difference_between_vehicle_and_dock))/(np.pi)
                 done = True
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -490,7 +490,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
 
             # Gives intermediate rewards
             reward = (np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5) + (np.pi/2 - abs(angular_difference_between_vehicle_and_dock))/np.pi/2
-            reward = (np.hypot(75, 75) - distance_between_vehicle_and_dock)/np.hypot(75, 75) + (2*np.pi - abs(angular_difference_between_vehicle_and_dock))/(2*np.pi)
+            reward = (np.hypot(75, 75) - distance_between_vehicle_and_dock)/np.hypot(75, 75) + (np.pi - abs(angular_difference_between_vehicle_and_dock))/(np.pi)
             rewards = np.append(rewards, reward)
             dones = np.append(dones, done)
 
@@ -593,7 +593,7 @@ number_of_simulations = 10_000
 best_simulation_reward = -1
 
 # Create the network
-dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.001, input_dims=[5], batch_size=64, n_actions=5)
+dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.001, input_dims=[5], batch_size=32, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=0.0001)
 
 # Beginning of the simulations
 for simulation_number in range(number_of_simulations):
