@@ -598,7 +598,7 @@ number_of_simulations = 25_000
 best_simulation_score = -np.inf
 
 # Create the network
-dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.002, input_dims=[7], batch_size=64, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=0.0002)
+dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.001, input_dims=[7], batch_size=256, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=2*(1/number_of_simulations))
 
 # Beginning of the simulations
 for simulation_number in range(number_of_simulations):
@@ -606,7 +606,7 @@ for simulation_number in range(number_of_simulations):
 
     # The actual simulation
     # Note that number_of_steps must be 1 higher than an int of seconds (f.ex sample_time = 0.1, and number_of_steps = 601 for 60 seconds)
-    simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="fixed", sample_time=0.1, number_of_steps=1801, visualize=False, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
+    simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="random", sample_time=0.1, number_of_steps=1801, visualize=False, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
 
     # Displays the simulation reward
     print("")
