@@ -1,6 +1,7 @@
 
 # Standard libraries
 import numpy as np
+from numpy import pi
 import matplotlib.pyplot as plt
 
 # AI libraries
@@ -18,16 +19,18 @@ from vehicles import otter
 
 
 class DeepQNetwork(nn.Module):
-    def __init__(self, lr, input_dims, fc1_dims, fc2_dims,
+    def __init__(self, lr, input_dims, fc1_dims, fc2_dims, fc3_dims,
             n_actions):
         super(DeepQNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
+        self.fc3_dims = fc3_dims
         self.n_actions = n_actions
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        self.fc4 = nn.Linear(self.fc3_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
@@ -37,7 +40,8 @@ class DeepQNetwork(nn.Module):
     def forward(self, state):
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
-        actions = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        actions = self.fc4(x)
 
         return actions
 
@@ -56,10 +60,10 @@ class Agent():
         self.iter_cntr = 0
         self.replace_target = 100
 
-        self.Q_eval = DeepQNetwork(lr, n_actions=n_actions, input_dims=input_dims,
-                                    fc1_dims=256, fc2_dims=256)
-        self.Q_next = DeepQNetwork(lr, n_actions=n_actions, input_dims=input_dims,
-                                    fc1_dims=64, fc2_dims=64)
+        self.Q_eval = DeepQNetwork(lr, input_dims=input_dims,
+                                    fc1_dims=256, fc2_dims=256, fc3_dims=256, n_actions=n_actions)
+        self.Q_next = DeepQNetwork(lr, input_dims=input_dims,
+                                    fc1_dims=64, fc2_dims=64, fc3_dims=64, n_actions=n_actions)
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
@@ -135,8 +139,8 @@ def rotate_z(p, theta):
 
 # Used to find the difference between two angles
 def smallest_signed_angle_between(x, y):
-    a = (x - y) % (2*np.pi)
-    b = (y - x) % (2*np.pi)
+    a = (x - y) % (2*pi)
+    b = (y - x) % (2*pi)
     return -a if a < b else b
 
 # Returns a list of x-y coordinates of the corners of the vehicle
@@ -277,7 +281,7 @@ def set_vehicle_thrusters(vehicle="otter", method="random", mover=None, inputs=N
             if inputs > 70:
                 thruster_configuration[0] = 50
                 thruster_configuration[1] = 50
-                0
+                action = 0
             if inputs > 80:
                 thruster_configuration[0] = 0
                 thruster_configuration[1] = 0
@@ -286,20 +290,20 @@ def set_vehicle_thrusters(vehicle="otter", method="random", mover=None, inputs=N
         elif method == "dq_agent":
             action = mover.choose_action(inputs)
             if action == 0: # Go forward
-                thruster_configuration[0] = 30
-                thruster_configuration[1] = 30
+                thruster_configuration[0] = 50
+                thruster_configuration[1] = 50
             elif action == 1: # Set to zero
                 thruster_configuration[0] = 0
                 thruster_configuration[1] = 0
             elif action == 2: # Go backwards
-                thruster_configuration[0] = -30
-                thruster_configuration[1] = -30
+                thruster_configuration[0] = -50
+                thruster_configuration[1] = -50
             elif action == 3: # Turn left
-                thruster_configuration[0] = -30
-                thruster_configuration[1] = 30
+                thruster_configuration[0] = -50
+                thruster_configuration[1] = 50
             elif action == 4: # Turn right
-                thruster_configuration[0] = 30
-                thruster_configuration[1] = -30
+                thruster_configuration[0] = 50
+                thruster_configuration[1] = -50
 
         elif method == "cybernetics":
             print("Make cybernetics method in set_vehicle_thrusters")
@@ -309,17 +313,17 @@ def set_vehicle_thrusters(vehicle="otter", method="random", mover=None, inputs=N
 
 
 
-def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_of_steps=9010, visualize=True, print_information=True, starting_position="random", movement_method="fixed", movement_model=None):
+def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of_steps=1801, visualize=True, print_information=True, starting_position="random", movement_method="fixed", movement_model=None):
     # DQL parameters
     action_taken = None
-    observation = np.zeros(7, dtype=np.float32)
-    next_observation = np.zeros(7, dtype=np.float32)
+    observation = np.zeros(10, dtype=np.float32)
+    next_observation = np.zeros(10, dtype=np.float32)
     reward = 0
     done = 0
     # This list will be filled during simulation
     actions_taken = np.zeros(1, dtype=np.int32)
-    vehicle_observations = np.zeros([1, 7], dtype=np.float32)
-    vehicle_next_observations = np.zeros([1, 7], dtype=np.float32)
+    vehicle_observations = np.zeros([1, 10], dtype=np.float32)
+    vehicle_next_observations = np.zeros([1, 10], dtype=np.float32)
     rewards = np.zeros(1, dtype=np.float32)
     dones = np.zeros(1, dtype=np.float32)
 
@@ -333,13 +337,13 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
     if starting_position == "random":
         eta[0] = 20*np.random.rand() - 10
         eta[1] = 20*np.random.rand() - 10
-        eta[5] = 2*np.pi*np.random.rand() - np.pi
+        eta[5] = 2*pi*np.random.rand() - pi
 
 
     # Gives the position and orientation of the dock
     if dock == "dummy_dock":
         dock_position = [27.5, -27.5]
-        dock_angle = np.deg2rad(225)
+        dock_angle = np.deg2rad(-135)
 
     # Setting initial parameters
     nu = vehicle.nu # Velocity
@@ -356,15 +360,15 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
     for step in range(number_of_steps):
         t = step * sample_time
 
-        if t % 1 == 0: # We only evalute the DQL agent at certain intervals
-            # Gather observation
+        if t % 2 == 0: # We only evalute the DQL agent at certain intervals
+            # Gather observations
             vehicle_yaw = -eta[5]
 
             distance_between_vehicle_and_dock = np.hypot(dock_position[0]-eta[1], dock_position[1]-eta[0])
             angular_difference_between_vehicle_and_dock = smallest_signed_angle_between(vehicle_yaw, dock_angle)
 
             # Collects the relevant data into a single array
-            observation = np.zeros(7, dtype=np.float32)
+            observation = np.zeros(10, dtype=np.float32)
             # X,Y-position and yaw
             observation[0] = eta[1] # x-position (global frame)
             observation[1] = eta[0] # y-position (global frame)
@@ -372,10 +376,14 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
             # Position difference
             observation[3] = dock_position[0] - eta[1] # Difference in x-position (global frame)
             observation[4] = dock_position[1] - eta[0] # Difference in y-position (global frame)
+            # Velocities
+            observation[5] = nu[1]
+            observation[6] = nu[0]
+            observation[7] = -nu[5]
             # Distance to dock
-            observation[5] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
+            observation[8] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
             # Angle to dock
-            observation[6] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
+            observation[9] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
 
             vehicle_observations = np.r_[vehicle_observations, [observation]]
 
@@ -394,15 +402,15 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
 
 
 
-        if t % 1 == 0: # We only evalute the DQL agent at certain intervals
-            # Gather relevant data
+        if t % 2 == 0: # We only evalute the DQL agent at certain intervals
+            # Gather next observations
             vehicle_yaw = -eta[5]
 
             distance_between_vehicle_and_dock = np.hypot(dock_position[0]-eta[1], dock_position[1]-eta[0])
             angular_difference_between_vehicle_and_dock = smallest_signed_angle_between(vehicle_yaw, dock_angle)
 
             # Collects the relevant data into a single array
-            next_observation = np.zeros(7, dtype=np.float32)
+            next_observation = np.zeros(10, dtype=np.float32)
             # X,Y-position and yaw
             next_observation[0] = eta[1] # x-position (global frame)
             next_observation[1] = eta[0] # y-position (global frame)
@@ -410,10 +418,14 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
             # Position difference
             next_observation[3] = dock_position[0] - eta[1] # Difference in x-position (global frame)
             next_observation[4] = dock_position[1] - eta[0] # Difference in y-position (global frame)
+            # Velocities
+            next_observation[5] = nu[1]
+            next_observation[6] = nu[0]
+            next_observation[7] = -nu[5]
             # Distance to dock
-            next_observation[5] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
+            next_observation[8] = distance_between_vehicle_and_dock # Absolute distance between vehicle and dock
             # Angle to dock
-            next_observation[6] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
+            next_observation[9] = angular_difference_between_vehicle_and_dock # Angular difference in radians (not absolute)
 
             # Add the observation at this time step to the entire history
             vehicle_next_observations = np.r_[vehicle_next_observations, [next_observation]]
@@ -444,8 +456,11 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
                     print("Reached time limit")
                     print("Ending simulation")
                     print("------------------------")
-                reward = (previous_distance_between_vehicle_and_dock - distance_between_vehicle_and_dock) + 9*(abs(previous_angular_difference_between_vehicle_and_dock) - abs(angular_difference_between_vehicle_and_dock))
-                done = True
+                if distance_between_vehicle_and_dock < 1 and angular_difference_between_vehicle_and_dock < np.deg2rad(10):
+                    reward = 100
+                    done = True
+                else:
+                    reward = (previous_distance_between_vehicle_and_dock - distance_between_vehicle_and_dock) + (abs(previous_angular_difference_between_vehicle_and_dock) - abs(angular_difference_between_vehicle_and_dock))
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
                 break
@@ -484,7 +499,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.02, number_o
 
 
             # Intermediate rewards
-            reward = (previous_distance_between_vehicle_and_dock - distance_between_vehicle_and_dock) + 9*(abs(previous_angular_difference_between_vehicle_and_dock) - abs(angular_difference_between_vehicle_and_dock))
+            reward = (previous_distance_between_vehicle_and_dock - distance_between_vehicle_and_dock) + (abs(previous_angular_difference_between_vehicle_and_dock) - abs(angular_difference_between_vehicle_and_dock))
             previous_distance_between_vehicle_and_dock = distance_between_vehicle_and_dock
             previous_angular_difference_between_vehicle_and_dock = angular_difference_between_vehicle_and_dock
             rewards = np.append(rewards, reward)
@@ -556,7 +571,7 @@ def mutate_network(network_topology, mutation_method="random"):
         return [1]
 
     if mutation_method == "random":
-        if np.random.random() >= 0.8: # Add a new layer
+        if np.random.random() >= 0.99: # Add a new layer
             mutated_network_topology = network_topology.append(1)
         else: # Increase neurons in a layer by 1
             mutated_network_topology = network_topology
@@ -591,79 +606,65 @@ def mutate_network(network_topology, mutation_method="random"):
 
 
 
+def main():
 
+    # The number of times we will simulate the vehicle
+    number_of_simulations = 10_000
+    best_simulation_score = -np.inf
 
-# The number of times we will simulate the vehicle
-number_of_simulations = 25_000
-best_simulation_score = -np.inf
+    # Create the network
+    dq_agent = Agent(gamma=0.95, epsilon=1.0, lr=0.001, input_dims=[10], batch_size=128, n_actions=5, max_mem_size=100_000, eps_end=0.05, eps_dec=0.0002)
 
-# Create the network
-dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.001, input_dims=[7], batch_size=256, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=2*(1/number_of_simulations))
+    # Beginning of the simulations
+    for simulation_number in range(number_of_simulations):
+        print("Starting simulation:", simulation_number + 1)
 
-# Beginning of the simulations
-for simulation_number in range(number_of_simulations):
-    print("Starting simulation:", simulation_number + 1)
+        # The actual simulation
+        # Note that number_of_steps must be 1 higher than an int of seconds (f.ex sample_time = 0.1, and number_of_steps = 601 for 60 seconds)
+        simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="random", sample_time=0.1, number_of_steps=1801, visualize=False, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
 
-    # The actual simulation
-    # Note that number_of_steps must be 1 higher than an int of seconds (f.ex sample_time = 0.1, and number_of_steps = 601 for 60 seconds)
-    simulation_actions_taken, simulation_vehicle_observations, simulation_vehicle_next_observations, simulation_rewards, simulation_dones = simulate(starting_position="random", sample_time=0.1, number_of_steps=1801, visualize=False, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
+        # Displays the simulation reward
+        print("")
+        print("------------------------")
+        print("Simulation score:")
+        print(np.sum(simulation_rewards))
+        print("------------------------")
+        print("\n")
 
-    # Displays the simulation reward
-    print("")
-    print("------------------------")
-    print("Simulation score:")
-    print(np.sum(simulation_rewards))
-    print("------------------------")
-    print("\n")
+        # Store memory
+        for n in range(len(simulation_actions_taken)):
+            dq_agent.store_transition(simulation_vehicle_observations[n, :], simulation_actions_taken[n], simulation_rewards[n], simulation_vehicle_next_observations[n, :], simulation_dones[n])
 
-    # Store memory
-    for n in range(len(simulation_actions_taken)):
-        dq_agent.store_transition(simulation_vehicle_observations[n, :], simulation_actions_taken[n], simulation_rewards[n], simulation_vehicle_next_observations[n, :], simulation_dones[n])
         # Train the network
         dq_agent.learn()
 
-    # Train the network
-    #dq_agent.learn()
+        # Saves the network during training
+        T.save(dq_agent.Q_eval, "neural_network_models/trained_model.pt")
 
-    # Saves the network during training
-    T.save(dq_agent.Q_eval, "neural_network_models/trained_model.pt")
+        # Record the best score
+        if np.sum(simulation_rewards) > best_simulation_score:
+            best_simulation_score = np.sum(simulation_rewards)
+            print("\n---------")
+            print("New best:")
+            print(np.round(best_simulation_score, 7))
+            print("---------\n")
 
-    # Record the best score
-    if np.sum(simulation_rewards) > best_simulation_score:
-        best_simulation_score = np.sum(simulation_rewards)
-        print("\n---------")
-        print("New best:")
-        print(np.round(best_simulation_score, 7))
-        print("---------\n")
+    # Shows the best reward
+    print("\n------------------------")
+    print("All simulations finished")
+    print("Best score:")
+    print(best_simulation_score)
+    print("------------------------\n")
 
-
-
-# Shows the best reward
-print("\n------------------------")
-print("All simulations finished")
-print("Best score:")
-print(best_simulation_score)
-print("------------------------\n")
-
-
-
-# Save the network after training
-T.save(dq_agent.Q_eval, "neural_network_models/final_trained_model.pt")
-
-# Load a network for testing
-"""
-test_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.001, input_dims=[9], batch_size=32, n_actions=5)
-test_agent.Q_eval = T.load("neural_network_models/final_trained_model.pt")
-test_agent.Q_eval.eval()
-"""
-
-# Visualize end result
-#simulate(starting_position="random", sample_time=0.1, number_of_steps=1801, visualize=True, print_information=False, movement_method="dq_agent", movement_model=dq_agent)
+    # Save the network after training
+    T.save(dq_agent.Q_eval, "neural_network_models/final_trained_model.pt")
 
 
 
 
 
+if __name__ == '__main__':
+    main()
 
 
 
