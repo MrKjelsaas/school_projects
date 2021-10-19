@@ -5,16 +5,22 @@ import torch.optim as optim
 import numpy as np
 
 class DeepQNetwork(nn.Module):
-    def __init__(self, lr, input_dims, fc1_dims, fc2_dims,
+    def __init__(self, lr, input_dims, fc1_dims, fc2_dims, fc3_dims, fc4_dims, fc5_dims,
             n_actions):
         super(DeepQNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
+        self.fc3_dims = fc3_dims
+        self.fc4_dims = fc4_dims
+        self.fc5_dims = fc5_dims
         self.n_actions = n_actions
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        self.fc4 = nn.Linear(self.fc3_dims, self.fc4_dims)
+        self.fc5 = nn.Linear(self.fc4_dims, self.fc5_dims)
+        self.fc6 = nn.Linear(self.fc5_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
@@ -24,13 +30,16 @@ class DeepQNetwork(nn.Module):
     def forward(self, state):
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
-        actions = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = F.relu(self.fc5(x))
+        actions = self.fc6(x)
 
         return actions
 
 class Agent():
     def __init__(self, gamma, epsilon, lr, input_dims, batch_size, n_actions,
-            max_mem_size=100000, eps_end=0.05, eps_dec=5e-4):
+            max_mem_size=100_000, eps_end=0.01, eps_dec=0.0005):
         self.gamma = gamma
         self.epsilon = epsilon
         self.eps_min = eps_end
@@ -43,10 +52,10 @@ class Agent():
         self.iter_cntr = 0
         self.replace_target = 100
 
-        self.Q_eval = DeepQNetwork(lr, n_actions=n_actions, input_dims=input_dims,
-                                    fc1_dims=256, fc2_dims=256)
-        self.Q_next = DeepQNetwork(lr, n_actions=n_actions, input_dims=input_dims,
-                                    fc1_dims=64, fc2_dims=64)
+        self.Q_eval = DeepQNetwork(lr, input_dims=input_dims,
+                                    fc1_dims=512, fc2_dims=1024, fc3_dims=2048, fc4_dims=1024, fc5_dims=512, n_actions=n_actions)
+        self.Q_next = DeepQNetwork(lr, input_dims=input_dims,
+                                    fc1_dims=512, fc2_dims=1024, fc3_dims=2048, fc4_dims=1024, fc5_dims=512, n_actions=n_actions)
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
