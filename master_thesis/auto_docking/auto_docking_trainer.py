@@ -449,7 +449,8 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Vehicle went out of bounds")
                     print("Ending simulation")
                     print("------------------------")
-                reward = -100
+                reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+                        + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 done = 1
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -464,7 +465,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Ending simulation")
                     print("------------------------")
                 reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
-                        + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/pi/2)
+                        + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
                 break
@@ -494,7 +495,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Vehicle crashed into the dock")
                     print("Ending simulation")
                     print("------------------------")
-                reward = -100
+                reward = -np.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)
                 done = 1
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -504,7 +505,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
 
             # Intermediate rewards
             reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
-                    + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/pi/2)
+                    + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
 
             rewards = np.append(rewards, reward)
             dones = np.append(dones, done)
