@@ -341,9 +341,9 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
     # x, y, z, roll, pitch, yaw (uses NED reference frame)
     eta = np.array([-25, 25, 0, 0, 0, 0], np.float32)
     if starting_position == "random":
-        eta[0] = np.random.rand() - 0.5
-        eta[1] = np.random.rand() - 0.5
-        eta[5] = 2*pi*np.random.rand() - pi
+        eta[0] += np.random.rand() - 0.5
+        eta[1] += np.random.rand() - 0.5
+        eta[5] += 2*pi*np.random.rand() - pi
 
 
     # Gives the position and orientation of the dock
