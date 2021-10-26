@@ -113,12 +113,13 @@ class otter_usv:
 
 
 
-    def set_manual_control_mode(self, force_x, torque_z):
-        print("Otter entering manual control mode with X force:", force_x, "Z torque:", torque_z)
+    def set_manual_control_mode(self, force_x, force_y, torque_z):
+        print("Otter entering manual control mode with X force:", force_x, "Y force:", force_y, "Z torque:", torque_z)
         force_x = str(np.round(force_x, 2))
+        force_y = str(np.round(force_y, 2))
         torque_z = str(np.round(torque_z, 2))
 
-        message_to_send = "$PMARMAN," + force_x + "," + torque_z + '*'
+        message_to_send = "$PMARMAN," + force_x + "," + force_y + "," + torque_z + '*'
         message_to_send += checksum(message_to_send[1:-1])
         message_to_send += "\r\n"
 
@@ -223,7 +224,7 @@ class otter_usv:
     def EMERGENCY_BRAKES(self):
         print("APPLYING EMERGENCY BRAKES")
 
-        self.set_manual_control_mode(-1, 0, 0)
+        self.set_manual_control_mode(-1, -1, 0)
 
         while self.current_speed > 0:
             pass

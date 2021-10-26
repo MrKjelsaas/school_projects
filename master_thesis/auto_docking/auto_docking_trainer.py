@@ -339,10 +339,10 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
 
     # Set initial position and attitude of vehicle
     # x, y, z, roll, pitch, yaw (uses NED reference frame)
-    eta = np.array([0, 0, 0, 0, 0, 0], np.float32)
+    eta = np.array([-25, 25, 0, 0, 0, 0], np.float32)
     if starting_position == "random":
-        eta[0] = 20*np.random.rand() - 10
-        eta[1] = 20*np.random.rand() - 10
+        eta[0] = np.random.rand() - 0.5
+        eta[1] = np.random.rand() - 0.5
         eta[5] = 2*pi*np.random.rand() - pi
 
 
@@ -449,7 +449,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Vehicle went out of bounds")
                     print("Ending simulation")
                     print("------------------------")
-                reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+                reward = 9*((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
                         + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 done = 1
                 rewards = np.append(rewards, reward)
@@ -464,7 +464,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Reached time limit")
                     print("Ending simulation")
                     print("------------------------")
-                reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+                reward = 9*((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
                         + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -504,7 +504,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
 
 
             # Intermediate rewards
-            reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+            reward = 9*((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
                     + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
 
             rewards = np.append(rewards, reward)
@@ -614,7 +614,7 @@ def mutate_network(network_topology, mutation_method="random"):
 def main():
 
     # The number of times we will simulate the vehicle
-    number_of_simulations = 1_000_000
+    number_of_simulations = 100_000
     best_simulation_score = -np.inf
 
     # Create the network
