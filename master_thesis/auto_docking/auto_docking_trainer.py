@@ -387,7 +387,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
             observation[6] = nu[1] / 3
             observation[7] = nu[5] / 3
             # Distance to dock
-            observation[8] = distance_between_vehicle_and_dock / np.hypot(27.5, 27.5) # Absolute distance between vehicle and dock
+            observation[8] = distance_between_vehicle_and_dock / np.hypot(2.5, 2.5) # Absolute distance between vehicle and dock
             # Angle to dock
             observation[9] = angular_difference_between_vehicle_and_dock / (2*pi) # Angular difference in radians (not absolute)
 
@@ -430,7 +430,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
             next_observation[6] = nu[1] / 3
             next_observation[7] = nu[5] / 3
             # Distance to dock
-            next_observation[8] = distance_between_vehicle_and_dock / np.hypot(27.5, 27.5) # Absolute distance between vehicle and dock
+            next_observation[8] = distance_between_vehicle_and_dock / np.hypot(2.5, 2.5) # Absolute distance between vehicle and dock
             # Angle to dock
             next_observation[9] = angular_difference_between_vehicle_and_dock / (2*pi) # Angular difference in radians (not absolute)
 
@@ -449,7 +449,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Vehicle went out of bounds")
                     print("Ending simulation")
                     print("------------------------")
-                reward = 9*((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+                reward = 9*((np.hypot(2.5, 2.5) - distance_between_vehicle_and_dock)/np.hypot(2.5, 2.5)) \
                         + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 done = 1
                 rewards = np.append(rewards, reward)
@@ -464,7 +464,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Reached time limit")
                     print("Ending simulation")
                     print("------------------------")
-                reward = 9*((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+                reward = 9*((np.hypot(2.5, 2.5) - distance_between_vehicle_and_dock)/np.hypot(2.5, 2.5)) \
                         + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -504,7 +504,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
 
 
             # Intermediate rewards
-            reward = 9*((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+            reward = 9*((np.hypot(2.5, 2.5) - distance_between_vehicle_and_dock)/np.hypot(2.5, 2.5)) \
                     + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
 
             rewards = np.append(rewards, reward)
