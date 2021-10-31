@@ -505,9 +505,6 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
 
 
             # Intermediate rewards
-            reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
-                    + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
-
             rewards = np.append(rewards, reward)
             dones = np.append(dones, done)
 
@@ -620,7 +617,7 @@ def main():
     best_simulation_score = -np.inf
 
     # Create the network
-    dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.0001, input_dims=[10], batch_size=64, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=1/(number_of_simulations/2))
+    dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.0001, input_dims=[10], batch_size=32, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=1/(60*number_of_simulations/2))
 
     # Beginning of the simulations
     for simulation_number in range(number_of_simulations):
