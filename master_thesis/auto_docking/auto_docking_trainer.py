@@ -339,10 +339,10 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
 
     # Set initial position and attitude of vehicle
     # x, y, z, roll, pitch, yaw (uses NED reference frame)
-    eta = np.array([-25, 25, 0, 0, 0, 0], np.float32)
+    eta = np.array([0, 0, 0, 0, 0, 0], np.float32)
     if starting_position == "random":
-        eta[0] += np.random.rand() - 0.5
-        eta[1] += np.random.rand() - 0.5
+        eta[0] += 5*np.random.rand() - 2.5
+        eta[1] += 5*np.random.rand() - 2.5
         eta[5] += 2*pi*np.random.rand() - pi
 
 
@@ -387,7 +387,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
             observation[6] = nu[1] / 3
             observation[7] = nu[5] / 3
             # Distance to dock
-            observation[8] = distance_between_vehicle_and_dock / np.hypot(2.5, 2.5) # Absolute distance between vehicle and dock
+            observation[8] = distance_between_vehicle_and_dock / np.hypot(27.5, 27.5) # Absolute distance between vehicle and dock
             # Angle to dock
             observation[9] = angular_difference_between_vehicle_and_dock / (2*pi) # Angular difference in radians (not absolute)
 
@@ -430,7 +430,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
             next_observation[6] = nu[1] / 3
             next_observation[7] = nu[5] / 3
             # Distance to dock
-            next_observation[8] = distance_between_vehicle_and_dock / np.hypot(2.5, 2.5) # Absolute distance between vehicle and dock
+            next_observation[8] = distance_between_vehicle_and_dock / np.hypot(27.5, 27.5) # Absolute distance between vehicle and dock
             # Angle to dock
             next_observation[9] = angular_difference_between_vehicle_and_dock / (2*pi) # Angular difference in radians (not absolute)
 
@@ -449,7 +449,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Vehicle went out of bounds")
                     print("Ending simulation")
                     print("------------------------")
-                reward = 9*((np.hypot(2.5, 2.5) - distance_between_vehicle_and_dock)/np.hypot(2.5, 2.5)) \
+                reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
                         + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 done = 1
                 rewards = np.append(rewards, reward)
@@ -464,7 +464,7 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Reached time limit")
                     print("Ending simulation")
                     print("------------------------")
-                reward = 9*((np.hypot(2.5, 2.5) - distance_between_vehicle_and_dock)/np.hypot(2.5, 2.5)) \
+                reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
                         + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -502,13 +502,13 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                 break
 
 
-
             # Intermediate rewards
-            reward = 9*((np.hypot(2.5, 2.5) - distance_between_vehicle_and_dock)/np.hypot(2.5, 2.5)) \
+            reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
                     + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
 
             rewards = np.append(rewards, reward)
             dones = np.append(dones, done)
+
 
 
 
@@ -630,12 +630,17 @@ def main():
             simulate(starting_position="random", movement_model=dq_agent)
 
         # Displays the simulation reward
+        final_reward = simulation_rewards[-1]
         print("")
         print("------------------------")
-        print("Simulation score:")
-        print(np.sum(simulation_rewards))
+        print("Final reward:")
+        print(final_reward)
         print("------------------------")
         print("\n")
+
+        # Fixes intermediate rewards
+        for n in range(len(simulation_rewards)):
+            simulation_rewards[-(n+1)] = final_reward*(0.99**n)
 
         # Store memory
         for n in range(len(simulation_actions_taken)):
@@ -648,8 +653,8 @@ def main():
         T.save(dq_agent.Q_eval, "neural_network_models/trained_model.pt")
 
         # Record the best score
-        if np.sum(simulation_rewards) > best_simulation_score:
-            best_simulation_score = np.sum(simulation_rewards)
+        if final_reward > best_simulation_score:
+            best_simulation_score = final_reward
             print("\n---------")
             print("New best:")
             print(np.round(best_simulation_score, 7))
