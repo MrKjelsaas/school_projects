@@ -319,7 +319,7 @@ def set_vehicle_thrusters(vehicle="otter", method="random", mover=None, inputs=N
 
 
 
-def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of_steps=601, visualize=False, print_information=False, starting_position="random", movement_method="dq_agent", movement_model=None):
+def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of_steps=1201, visualize=False, print_information=False, starting_position="random", movement_method="dq_agent", movement_model=None):
     # DQL parameters
     action_taken = -1
     observation = np.zeros(10, dtype=np.float32)
@@ -613,11 +613,11 @@ def mutate_network(network_topology, mutation_method="random"):
 def main():
 
     # The number of times we will simulate the vehicle
-    number_of_simulations = 100_000
+    number_of_simulations = 250_000
     best_simulation_score = -np.inf
 
     # Create the network
-    dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.0001, input_dims=[10], batch_size=32, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=1/(60*number_of_simulations/2))
+    dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.0001, input_dims=[10], batch_size=64, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=1/(120*number_of_simulations/2))
 
     # Beginning of the simulations
     for simulation_number in range(number_of_simulations):
@@ -659,9 +659,9 @@ def main():
             print(np.round(best_simulation_score, 7))
             print("---------\n")
 
-            best_final_pose = [np.round(simulation_vehicle_observations[-1, 1], 2), \
-                               np.round(simulation_vehicle_observations[-1, 0], 2), \
-                               np.round(-simulation_vehicle_observations[-1, 2], 2)]
+            best_final_pose = [np.round(simulation_vehicle_observations[-1, 1]*50, 2), \
+                               np.round(simulation_vehicle_observations[-1, 0]*50, 2), \
+                               np.round(-simulation_vehicle_observations[-1, 2]*2*pi, 2)]
 
             best_simulation_number = simulation_number
 
