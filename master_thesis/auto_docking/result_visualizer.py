@@ -18,7 +18,7 @@ from auto_docking_trainer import simulate, Agent, DeepQNetwork
 
 
 
-test_agent = Agent(gamma=0.99, epsilon=0, lr=0.001, input_dims=[10], batch_size=32, n_actions=5)
+test_agent = Agent(gamma=0.99, epsilon=0, lr=0.001, input_dims=[10], batch_size=64, n_actions=5)
 test_agent.Q_eval = T.load("neural_network_models/final_trained_model_AI.pt")
 test_agent.Q_eval.eval()
 

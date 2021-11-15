@@ -257,7 +257,7 @@ def set_vehicle_thrusters(vehicle="otter", method="random", mover=None, inputs=N
 
     if vehicle == "otter":
         if method == "random":
-            thruster_configuration = np.array([np.random.random_integers(0, 100), np.random.random_integers(0, 100)], float)
+            thruster_configuration = np.array([np.random.random_integers(-100, 100), np.random.random_integers(-100, 100)], float)
 
         elif method == "fixed":
             if inputs > 10:
@@ -449,8 +449,8 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Vehicle went out of bounds")
                     print("Ending simulation")
                     print("------------------------")
-                reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5))**3 \
-                        + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))**3
+                reward = 90*np.exp((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+                        + 10*np.exp((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 done = 1
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -464,8 +464,8 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Reached time limit")
                     print("Ending simulation")
                     print("------------------------")
-                reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5))**3 \
-                        + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))**3
+                reward = 90*np.exp((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+                        + 10*np.exp((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
                 break
@@ -495,9 +495,9 @@ def simulate(vehicle_type="otter", dock="dummy_dock", sample_time=0.1, number_of
                     print("Vehicle crashed into the dock")
                     print("Ending simulation")
                     print("------------------------")
-                reward = ((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5))**3 \
-                        + ((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2))**3 \
-                        -np.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)
+                reward = 90*np.exp((np.hypot(27.5, 27.5) - distance_between_vehicle_and_dock)/np.hypot(27.5, 27.5)) \
+                        + 10*np.exp((pi/2-abs(angular_difference_between_vehicle_and_dock))/(pi/2)) \
+                        - 10*np.sqrt(nu[0]**2 + nu[1]**2 + nu[2]**2)
                 done = 1
                 rewards = np.append(rewards, reward)
                 dones = np.append(dones, done)
@@ -613,11 +613,11 @@ def mutate_network(network_topology, mutation_method="random"):
 def main():
 
     # The number of times we will simulate the vehicle
-    number_of_simulations = 100_000
+    number_of_simulations = 1_000_000
     best_simulation_score = -np.inf
 
     # Create the network
-    dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.0001, input_dims=[10], batch_size=64, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=1/(120*number_of_simulations/2))
+    dq_agent = Agent(gamma=0.99, epsilon=1.0, lr=0.001, input_dims=[10], batch_size=256, n_actions=5, max_mem_size=100_000, eps_end=0.01, eps_dec=1/(120*number_of_simulations/2))
 
     # Beginning of the simulations
     for simulation_number in range(number_of_simulations):
@@ -649,7 +649,7 @@ def main():
             dq_agent.learn()
 
         # Saves the network during training
-        T.save(dq_agent.Q_eval, "neural_network_models/trained_model.pt")
+        T.save(dq_agent.Q_eval, "neural_network_models/trained_model.pt", _use_new_zipfile_serialization=False)
 
         # Record the best score
         if final_reward > best_simulation_score:
