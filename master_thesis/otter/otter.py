@@ -5,6 +5,7 @@ import select
 import numpy as np
 import cv2
 import os
+import pymap3d as pm
 
 
 
@@ -105,7 +106,7 @@ class otter_usv():
             return received_message
 
         else:
-            return ""
+            return None
 
 
 
