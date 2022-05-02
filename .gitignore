@@ -1,0 +1,9 @@
+master_thesis/yolov5x.pt
+
+master_thesis/obstacle_detection/yolov5l.pt
+master_thesis/obstacle_detection/datasets/not_ship_images
+master_thesis/obstacle_detection/datasets/ship_images
+
+master_thesis/path_planning/binary_map.csv
+master_thesis/path_planning/oslofjord_binary_map.csv
+master_thesis/path_planning/planning_map.csv

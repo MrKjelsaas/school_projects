@@ -1,5 +1,9 @@
 import numpy as np
+from numpy import round
+import time
 from ship_dynamics import ship_dynamics_functions
+
+
 
 
 
@@ -23,6 +27,9 @@ class Node():
 def a_star(maze, start, end):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
+    # Sets a timeout timer
+    start_time = time.time()
+
     # Create start and end node
     start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0
@@ -38,6 +45,8 @@ def a_star(maze, start, end):
 
     # Loop until you find the end
     while len(open_list) > 0:
+        if time.time() - start_time > 1:
+            return []
 
         # Get the current node
         current_node = open_list[0]
@@ -104,85 +113,4 @@ def a_star(maze, start, end):
 
 
 
-def find_route(current_position, destination):
 
-    #NE: N59° 55", E10° 44.5"
-    #NE: 59.916666666666664, 10.741666666666667
-    #SW: N59° 54", E10° 41.0"
-    #SW: 59.9, 10.683333333333334
-    #Map size: 100 x 350
-
-    x = current_position[0] - 59.9
-    x /= 59.916666666666664 - 59.9
-    x *= 100
-    x = 100 - x
-    x = np.round(x, 0)
-    x = int(x)
-
-    y = current_position[1] - 10.683333333333334
-    y /= 10.741666666666667 - 10.683333333333334
-    y *= 350
-    y = np.round(y, 0)
-    y = int(y)
-
-    scaled_current_position = (x, y)
-
-
-    x = destination[0] - 59.9
-    x /= 59.916666666666664 - 59.9
-    x *= 100
-    x = 100 - x
-    x = np.round(x, 0)
-    x = int(x)
-
-    y = destination[1] - 10.683333333333334
-    y /= 10.741666666666667 - 10.683333333333334
-    y *= 350
-    y = np.round(y, 0)
-    y = int(y)
-
-    scaled_destination = (x, y)
-
-    oslofjord_binary_map = np.loadtxt("path_planning/oslofjord_binary_map.csv")
-
-    route = a_star(oslofjord_binary_map, scaled_current_position, scaled_destination)
-
-    descaled_route = []
-    for n in range(len(route)):
-        x = 100 - route[n][0]
-        x /= 100
-        x *= 59.916666666666664 - 59.9
-        x += 59.9
-
-        y = route[n][1]
-        y /= 350
-        y *= 10.741666666666667 - 10.683333333333334
-        y += 10.683333333333334
-
-
-        descaled_route.append((x, y))
-
-    for n in range(len(descaled_route)):
-        descaled_route[n] = ship_dynamics_functions.decimal_to_degrees_minutes_seconds(descaled_route[n])
-
-    return descaled_route
-
-
-
-
-
-
-
-
-
-if __name__ == "__main__":
-
-    #NE: 5955.000, 1044.500
-    #SW: 5954.000, 1041.000
-
-    oslofjord_binary_map = np.loadtxt("oslofjord_binary_map.csv")
-    #print(oslofjord_binary_map)
-    #print(oslofjord_binary_map.shape) 1000, 3500
-
-    a_star_solution = a_star(oslofjord_binary_map, (0, 0), (750, 250))
-    print("A star path solution:", a_star_solution)
